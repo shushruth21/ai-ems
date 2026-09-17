@@ -1,0 +1,15 @@
+// AI EMS — Prisma schema (multi-file). Conventions:
+//  • every tenant table has organizationId and a composite index starting with it
+//  • money Decimal(14,2), quantity Decimal(14,3), rates/percent Decimal(7,4)
+//  • optimistic locking via `version`, soft delete via `archivedAt`
+//  • tables and columns are snake_case in Postgres
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}

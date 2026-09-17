@@ -1,0 +1,97 @@
+// ─── Collaboration: polymorphic comments, tasks, notifications, files ────
+
+model Comment {
+  id             String    @id @default(cuid(2))
+  organizationId String    @map("organization_id")
+  entityType     String    @map("entity_type")
+  entityId       String    @map("entity_id")
+  authorId       String    @map("author_id") @db.Uuid
+  body           String
+  mentions       String[]  @db.Uuid
+  editedAt       DateTime? @map("edited_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, entityType, entityId, createdAt])
+  @@map("comments")
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Task {
+  id             String     @id @default(cuid(2))
+  organizationId String     @map("organization_id")
+  title          String
+  description    String?
+  status         TaskStatus @default(TODO)
+  priority       Priority   @default(MEDIUM)
+  assigneeId     String?    @map("assignee_id") @db.Uuid
+  dueAt          DateTime?  @map("due_at")
+  entityType     String?    @map("entity_type")
+  entityId       String?    @map("entity_id")
+  completedAt    DateTime?  @map("completed_at")
+  createdById    String     @map("created_by_id") @db.Uuid
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  version        Int        @default(0)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, assigneeId, status])
+  @@index([organizationId, entityType, entityId])
+  @@map("tasks")
+}
+
+model Notification {
+  id             String    @id @default(cuid(2))
+  organizationId String    @map("organization_id")
+  recipientId    String    @map("recipient_id") @db.Uuid
+  type           String
+  title          String
+  body           String?
+  href           String?
+  entityType     String?   @map("entity_type")
+  entityId       String?   @map("entity_id")
+  readAt         DateTime? @map("read_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, readAt, createdAt(sort: Desc)])
+  @@index([organizationId, createdAt])
+  @@map("notifications")
+}
+
+model Attachment {
+  id             String   @id @default(cuid(2))
+  organizationId String   @map("organization_id")
+  entityType     String   @map("entity_type")
+  entityId       String   @map("entity_id")
+  bucket         String
+  path           String
+  fileName       String   @map("file_name")
+  mimeType       String   @map("mime_type")
+  sizeBytes      Int      @map("size_bytes")
+  uploadedById   String   @map("uploaded_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([bucket, path])
+  @@index([organizationId, entityType, entityId])
+  @@map("attachments")
+}

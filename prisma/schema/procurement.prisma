@@ -1,0 +1,118 @@
+// ─── Procurement ─────────────────────────────────────────────────────────
+
+model Supplier {
+  id             String   @id @default(cuid(2))
+  organizationId String   @map("organization_id")
+  code           String
+  name           String
+  email          String?
+  phone          String?
+  taxId          String?  @map("tax_id")
+  address        Json?
+  paymentTerms   String?  @map("payment_terms")
+  rating         Decimal? @db.Decimal(3, 2)
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  purchaseOrders PurchaseOrder[]
+  preferredFor   Item[]
+
+  @@unique([organizationId, code])
+  @@map("suppliers")
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  SENT
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CLOSED
+  CANCELLED
+}
+
+model PurchaseOrder {
+  id             String              @id @default(cuid(2))
+  organizationId String              @map("organization_id")
+  number         String
+  status         PurchaseOrderStatus @default(DRAFT)
+  supplierId     String              @map("supplier_id")
+  currency       String              @db.Char(3)
+  subtotal       Decimal             @default(0) @db.Decimal(14, 2)
+  taxTotal       Decimal             @default(0) @map("tax_total") @db.Decimal(14, 2)
+  total          Decimal             @default(0) @db.Decimal(14, 2)
+  expectedDate   DateTime?           @map("expected_date") @db.Date
+  terms          String?
+  approvedById   String?             @map("approved_by_id") @db.Uuid
+  approvedAt     DateTime?           @map("approved_at")
+  sentAt         DateTime?           @map("sent_at")
+  createdById    String              @map("created_by_id") @db.Uuid
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  version        Int                 @default(0)
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  supplier     Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  lines        PurchaseOrderLine[]
+  receipts     GoodsReceipt[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId, status, supplierId])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderLine {
+  id              String  @id @default(cuid(2))
+  organizationId  String  @map("organization_id")
+  purchaseOrderId String  @map("purchase_order_id")
+  lineNo          Int     @map("line_no")
+  itemId          String  @map("item_id")
+  quantity        Decimal @db.Decimal(14, 3)
+  unitPrice       Decimal @map("unit_price") @db.Decimal(14, 4)
+  taxRatePct      Decimal @default(0) @map("tax_rate_pct") @db.Decimal(7, 4)
+  qtyReceived     Decimal @default(0) @map("qty_received") @db.Decimal(14, 3)
+  qtyAccepted     Decimal @default(0) @map("qty_accepted") @db.Decimal(14, 3)
+
+  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  item          Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@unique([purchaseOrderId, lineNo])
+  @@index([organizationId, itemId])
+  @@map("purchase_order_lines")
+}
+
+enum ReceiptStatus {
+  RECEIVED
+  INSPECTING
+  ACCEPTED
+  PARTIALLY_ACCEPTED
+  REJECTED
+}
+
+model GoodsReceipt {
+  id              String        @id @default(cuid(2))
+  organizationId  String        @map("organization_id")
+  number          String
+  purchaseOrderId String        @map("purchase_order_id")
+  warehouseId     String        @map("warehouse_id")
+  status          ReceiptStatus @default(RECEIVED)
+  supplierDocRef  String?       @map("supplier_doc_ref")
+  vehicleRef      String?       @map("vehicle_ref")
+  /// [{ poLineId, qtyReceived, qtyAccepted, lotNumber }]
+  lines           Json
+  receivedById    String        @map("received_by_id") @db.Uuid
+  receivedAt      DateTime      @default(now()) @map("received_at")
+
+  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  warehouse     Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  inspections   Inspection[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId, purchaseOrderId])
+  @@map("goods_receipts")
+}
