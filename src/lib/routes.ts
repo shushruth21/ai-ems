@@ -11,8 +11,19 @@ export const PUBLIC_PATHS = [
 
 const PUBLIC_PREFIXES = ["/api/webhooks/", "/api/v1/", "/legal/"];
 
-export function isPublicPath(pathname: string): boolean {
+/**
+ * The /preview UI sandbox (sample data, no session) is on by default in
+ * development and off in production unless ENABLE_UI_PREVIEW=true.
+ */
+export function isPreviewEnabled(env: Record<string, string | undefined> = process.env): boolean {
+  if (env.ENABLE_UI_PREVIEW === "true") return true;
+  if (env.ENABLE_UI_PREVIEW === "false") return false;
+  return env.NODE_ENV !== "production";
+}
+
+export function isPublicPath(pathname: string, previewEnabled = isPreviewEnabled()): boolean {
   if ((PUBLIC_PATHS as readonly string[]).includes(pathname)) return true;
+  if (previewEnabled && (pathname === "/preview" || pathname.startsWith("/preview/"))) return true;
   return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 

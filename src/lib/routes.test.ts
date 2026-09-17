@@ -1,4 +1,4 @@
-import { isAuthPage, isPublicPath, safeRedirectPath } from "./routes";
+import { isAuthPage, isPreviewEnabled, isPublicPath, safeRedirectPath } from "./routes";
 
 describe("routes", () => {
   it("classifies public paths", () => {
@@ -14,5 +14,20 @@ describe("routes", () => {
     expect(safeRedirectPath("//evil.example")).toBe("/onboarding");
     expect(safeRedirectPath("/\\evil.example")).toBe("/onboarding");
     expect(safeRedirectPath(null, "/x")).toBe("/x");
+  });
+});
+
+describe("preview flag", () => {
+  it("defaults on in development and off in production", () => {
+    expect(isPreviewEnabled({ NODE_ENV: "development" })).toBe(true);
+    expect(isPreviewEnabled({ NODE_ENV: "production" })).toBe(false);
+    expect(isPreviewEnabled({ NODE_ENV: "production", ENABLE_UI_PREVIEW: "true" })).toBe(true);
+    expect(isPreviewEnabled({ NODE_ENV: "development", ENABLE_UI_PREVIEW: "false" })).toBe(false);
+  });
+
+  it("treats /preview as public only when enabled", () => {
+    expect(isPublicPath("/preview/demo/dashboard", true)).toBe(true);
+    expect(isPublicPath("/preview/demo/dashboard", false)).toBe(false);
+    expect(isPublicPath("/previewer", true)).toBe(false);
   });
 });

@@ -25,6 +25,7 @@ export default defineConfig({
     ? undefined
     : {
         command: `npm run build && npm run start -- -p ${port}`,
+        env: { ENABLE_UI_PREVIEW: "true" },
         url: `${baseURL}/api/health`,
         reuseExistingServer: !process.env.CI,
         timeout: 180_000,

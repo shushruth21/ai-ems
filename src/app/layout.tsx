@@ -1,22 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import localFont from "next/font/local";
 
-import "./globals.css";
+import { AppProviders } from "@/components/providers/app-providers";
+import { cn } from "@/lib/utils";
+import { fontMono, fontSans } from "@/styles/fonts";
 
-// Self-hosted variable fonts (SIL OFL 1.1) — no third-party requests, CSP-friendly.
-const inter = localFont({
-  src: "./fonts/inter-latin-var.woff2",
-  variable: "--font-inter",
-  weight: "100 900",
-  display: "swap",
-});
-const jetbrains = localFont({
-  src: "./fonts/jetbrains-mono-latin-var.woff2",
-  variable: "--font-jetbrains",
-  weight: "100 800",
-  display: "swap",
-});
+import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
@@ -28,23 +17,25 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fcfcfe" },
-    { media: "(prefers-color-scheme: dark)", color: "#16161f" },
+    { media: "(prefers-color-scheme: light)", color: "#fbfbfd" },
+    { media: "(prefers-color-scheme: dark)", color: "#15161b" },
   ],
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Reading request headers opts every page into dynamic rendering, which the
-  // nonce-based CSP set in proxy.ts requires (Next.js applies the nonce to its
-  // own scripts automatically). Read `x-nonce` here for any third-party <Script>.
-  await headers();
+  // nonce-based CSP set in proxy.ts requires. Next.js applies the nonce to its
+  // own scripts; we pass it to next-themes for its inline theme script.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrains.variable} h-full antialiased`}
+      className={cn(fontSans.variable, fontMono.variable, "h-full")}
       suppressHydrationWarning
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <AppProviders nonce={nonce}>{children}</AppProviders>
+      </body>
     </html>
   );
 }
