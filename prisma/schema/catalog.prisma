@@ -1,0 +1,136 @@
+// ─── Catalog & configurator ──────────────────────────────────────────────
+
+model ProductCategory {
+  id             String  @id @default(cuid(2))
+  organizationId String  @map("organization_id")
+  parentId       String? @map("parent_id")
+  code           String
+  name           String
+  sortOrder      Int     @default(0) @map("sort_order")
+  active         Boolean @default(true)
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent       ProductCategory?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children     ProductCategory[] @relation("CategoryTree")
+  products     Product[]
+
+  @@unique([organizationId, code])
+  @@map("product_categories")
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  DISCONTINUED
+}
+
+model Product {
+  id             String        @id @default(cuid(2))
+  organizationId String        @map("organization_id")
+  categoryId     String        @map("category_id")
+  sku            String
+  name           String
+  description    String?
+  status         ProductStatus @default(DRAFT)
+  isConfigurable Boolean       @default(false) @map("is_configurable")
+  basePrice      Decimal       @map("base_price") @db.Decimal(14, 2)
+  taxRatePct     Decimal       @default(0) @map("tax_rate_pct") @db.Decimal(7, 4)
+  leadTimeDays   Int           @default(0) @map("lead_time_days")
+  imagePath      String?       @map("image_path")
+  itemId         String?       @unique @map("item_id")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  version        Int           @default(0)
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category     ProductCategory   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  item         Item?             @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  optionGroups OptionGroup[]
+  priceRules   PriceRule[]
+  boms         BillOfMaterials[]
+  quoteLines   QuoteLine[]
+  orderLines   SalesOrderLine[]
+
+  @@unique([organizationId, sku])
+  @@index([organizationId, categoryId, status])
+  @@map("products")
+}
+
+enum OptionInput {
+  SELECT
+  MULTI_SELECT
+  NUMBER
+  TEXT
+  BOOLEAN
+}
+
+model OptionGroup {
+  id             String      @id @default(cuid(2))
+  organizationId String      @map("organization_id")
+  productId      String      @map("product_id")
+  code           String
+  label          String
+  input          OptionInput @default(SELECT)
+  required       Boolean     @default(false)
+  minValue       Decimal?    @map("min_value") @db.Decimal(14, 3)
+  maxValue       Decimal?    @map("max_value") @db.Decimal(14, 3)
+  sortOrder      Int         @default(0) @map("sort_order")
+  /// Visibility rule (JSON-logic), e.g. show only when another option has a value.
+  visibleWhen    Json?       @map("visible_when")
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options      ProductOption[]
+
+  @@unique([productId, code])
+  @@index([organizationId])
+  @@map("option_groups")
+}
+
+model ProductOption {
+  id             String  @id @default(cuid(2))
+  organizationId String  @map("organization_id")
+  groupId        String  @map("group_id")
+  code           String
+  label          String
+  priceDelta     Decimal @default(0) @map("price_delta") @db.Decimal(14, 2)
+  pricePctDelta  Decimal @default(0) @map("price_pct_delta") @db.Decimal(7, 4)
+  swatchPath     String? @map("swatch_path")
+  active         Boolean @default(true)
+  sortOrder      Int     @default(0) @map("sort_order")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  group        OptionGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, code])
+  @@index([organizationId])
+  @@map("product_options")
+}
+
+enum PriceRuleKind {
+  PER_UNIT_DIMENSION
+  VOLUME_DISCOUNT
+  CUSTOMER_TIER
+  SURCHARGE
+}
+
+/// Declarative pricing rules evaluated server-side by src/domain/pricing.
+model PriceRule {
+  id             String        @id @default(cuid(2))
+  organizationId String        @map("organization_id")
+  productId      String?       @map("product_id")
+  name           String
+  kind           PriceRuleKind
+  priority       Int           @default(100)
+  condition      Json?
+  effect         Json
+  validFrom      DateTime?     @map("valid_from")
+  validTo        DateTime?     @map("valid_to")
+  active         Boolean       @default(true)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, productId, active])
+  @@map("price_rules")
+}

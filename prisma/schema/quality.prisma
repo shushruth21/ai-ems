@@ -1,0 +1,86 @@
+// ─── Quality ─────────────────────────────────────────────────────────────
+
+enum InspectionStage {
+  INBOUND
+  IN_PROCESS
+  FINAL
+}
+
+enum InspectionResult {
+  PENDING
+  PASSED
+  FAILED
+  CONDITIONAL
+}
+
+model InspectionPlan {
+  id             String          @id @default(cuid(2))
+  organizationId String          @map("organization_id")
+  name           String
+  stage          InspectionStage
+  appliesTo      String?         @map("applies_to")
+  /// [{ code, label, type: "check"|"measure", min?, max?, unit?, critical }]
+  checklist      Json
+  active         Boolean         @default(true)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inspections  Inspection[]
+
+  @@index([organizationId, stage])
+  @@map("inspection_plans")
+}
+
+model Inspection {
+  id             String           @id @default(cuid(2))
+  organizationId String           @map("organization_id")
+  number         String
+  stage          InspectionStage
+  planId         String           @map("plan_id")
+  result         InspectionResult @default(PENDING)
+  goodsReceiptId String?          @map("goods_receipt_id")
+  workOrderId    String?          @map("work_order_id")
+  /// [{ code, value, pass, note, photoPath? }]
+  responses      Json?
+  inspectorId    String?          @map("inspector_id") @db.Uuid
+  inspectedAt    DateTime?        @map("inspected_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan            InspectionPlan   @relation(fields: [planId], references: [id], onDelete: Restrict)
+  goodsReceipt    GoodsReceipt?    @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  workOrder       WorkOrder?       @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  nonConformances NonConformance[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId, stage, result])
+  @@map("inspections")
+}
+
+enum NcrDisposition {
+  PENDING
+  REWORK
+  USE_AS_IS
+  RETURN_TO_SUPPLIER
+  SCRAP
+}
+
+model NonConformance {
+  id             String         @id @default(cuid(2))
+  organizationId String         @map("organization_id")
+  number         String
+  inspectionId   String         @map("inspection_id")
+  description    String
+  severity       Priority       @default(MEDIUM)
+  disposition    NcrDisposition @default(PENDING)
+  rootCause      String?        @map("root_cause")
+  ownerId        String?        @map("owner_id") @db.Uuid
+  closedAt       DateTime?      @map("closed_at")
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inspection   Inspection   @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, number])
+  @@index([organizationId, disposition])
+  @@map("non_conformances")
+}

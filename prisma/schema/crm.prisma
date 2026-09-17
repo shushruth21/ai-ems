@@ -1,0 +1,147 @@
+// ─── CRM ─────────────────────────────────────────────────────────────────
+
+enum AccountType {
+  CUSTOMER
+  PROSPECT
+  PARTNER
+  OTHER
+}
+
+model Account {
+  id              String      @id @default(cuid(2))
+  organizationId  String      @map("organization_id")
+  name            String
+  type            AccountType @default(PROSPECT)
+  industry        String?
+  website         String?
+  taxId           String?     @map("tax_id")
+  billingAddress  Json?       @map("billing_address")
+  shippingAddress Json?       @map("shipping_address")
+  ownerId         String?     @map("owner_id") @db.Uuid
+  creditLimit     Decimal?    @map("credit_limit") @db.Decimal(14, 2)
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  archivedAt      DateTime?   @map("archived_at")
+  version         Int         @default(0)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contacts     Contact[]
+  leads        Lead[]
+  quotes       Quote[]
+  salesOrders  SalesOrder[]
+  invoices     Invoice[]
+
+  @@index([organizationId, name])
+  @@index([organizationId, ownerId])
+  @@map("accounts")
+}
+
+model Contact {
+  id             String    @id @default(cuid(2))
+  organizationId String    @map("organization_id")
+  accountId      String?   @map("account_id")
+  firstName      String    @map("first_name")
+  lastName       String?   @map("last_name")
+  email          String?
+  phone          String?
+  jobTitle       String?   @map("job_title")
+  marketingOptIn Boolean   @default(false) @map("marketing_opt_in")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  archivedAt     DateTime? @map("archived_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  account      Account?     @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  leads        Lead[]
+
+  @@index([organizationId, email])
+  @@index([organizationId, phone])
+  @@index([organizationId, accountId])
+  @@map("contacts")
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  WON
+  LOST
+  DISQUALIFIED
+}
+
+enum LeadSource {
+  WEBSITE
+  REFERRAL
+  WALK_IN
+  PHONE
+  EMAIL
+  SOCIAL
+  PAID_ADS
+  PARTNER
+  EVENT
+  OTHER
+}
+
+model Lead {
+  id              String     @id @default(cuid(2))
+  organizationId  String     @map("organization_id")
+  number          String
+  title           String
+  status          LeadStatus @default(NEW)
+  source          LeadSource @default(OTHER)
+  campaign        String?
+  accountId       String?    @map("account_id")
+  contactId       String?    @map("contact_id")
+  ownerId         String?    @map("owner_id") @db.Uuid
+  estimatedValue  Decimal?   @map("estimated_value") @db.Decimal(14, 2)
+  aiScore         Int?       @map("ai_score")
+  aiSummary       String?    @map("ai_summary")
+  lostReason      String?    @map("lost_reason")
+  nextFollowUpAt  DateTime?  @map("next_follow_up_at")
+  firstResponseAt DateTime?  @map("first_response_at")
+  convertedAt     DateTime?  @map("converted_at")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  version         Int        @default(0)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  account      Account?     @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  contact      Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  activities   Activity[]
+  quotes       Quote[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId, status, ownerId])
+  @@index([organizationId, nextFollowUpAt])
+  @@map("leads")
+}
+
+enum ActivityType {
+  CALL
+  EMAIL
+  MEETING
+  MESSAGE
+  NOTE
+  VISIT
+}
+
+model Activity {
+  id             String       @id @default(cuid(2))
+  organizationId String       @map("organization_id")
+  leadId         String?      @map("lead_id")
+  type           ActivityType
+  subject        String
+  body           String?
+  outcome        String?
+  occurredAt     DateTime     @default(now()) @map("occurred_at")
+  durationSec    Int?         @map("duration_sec")
+  actorId        String       @map("actor_id") @db.Uuid
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lead         Lead?        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, leadId, occurredAt])
+  @@map("activities")
+}

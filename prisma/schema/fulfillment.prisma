@@ -1,0 +1,54 @@
+// ─── Fulfillment ─────────────────────────────────────────────────────────
+
+enum ShipmentStatus {
+  PENDING
+  PACKED
+  SCHEDULED
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+}
+
+model Shipment {
+  id               String         @id @default(cuid(2))
+  organizationId   String         @map("organization_id")
+  number           String
+  salesOrderId     String         @map("sales_order_id")
+  status           ShipmentStatus @default(PENDING)
+  carrier          String?
+  trackingRef      String?        @map("tracking_ref")
+  vehicleRef       String?        @map("vehicle_ref")
+  scheduledFor     DateTime?      @map("scheduled_for")
+  deliveredAt      DateTime?      @map("delivered_at")
+  podSignaturePath String?        @map("pod_signature_path")
+  podPhotoPaths    String[]       @map("pod_photo_paths")
+  podReceivedBy    String?        @map("pod_received_by")
+  notes            String?
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  version          Int            @default(0)
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  salesOrder   SalesOrder     @relation(fields: [salesOrderId], references: [id], onDelete: Restrict)
+  lines        ShipmentLine[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId, status, scheduledFor])
+  @@map("shipments")
+}
+
+model ShipmentLine {
+  id               String  @id @default(cuid(2))
+  organizationId   String  @map("organization_id")
+  shipmentId       String  @map("shipment_id")
+  salesOrderLineId String  @map("sales_order_line_id")
+  quantity         Decimal @db.Decimal(14, 3)
+  packages         Int     @default(1)
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  shipment       Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  salesOrderLine SalesOrderLine @relation(fields: [salesOrderLineId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, shipmentId])
+  @@map("shipment_lines")
+}

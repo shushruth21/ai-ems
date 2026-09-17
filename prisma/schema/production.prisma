@@ -1,0 +1,161 @@
+// ─── Production: BOMs, routings, work orders, shop-floor time ────────────
+
+model WorkCenter {
+  id             String  @id @default(cuid(2))
+  organizationId String  @map("organization_id")
+  code           String
+  name           String
+  capacityHrsDay Decimal @default(8) @map("capacity_hrs_day") @db.Decimal(6, 2)
+  costPerHour    Decimal @default(0) @map("cost_per_hour") @db.Decimal(14, 2)
+  sequence       Int     @default(0)
+  active         Boolean @default(true)
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  operations   WorkOrderOperation[]
+
+  @@unique([organizationId, code])
+  @@map("work_centers")
+}
+
+enum BomStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  OBSOLETE
+}
+
+model BillOfMaterials {
+  id             String    @id @default(cuid(2))
+  organizationId String    @map("organization_id")
+  productId      String    @map("product_id")
+  revision       Int       @default(1)
+  status         BomStatus @default(DRAFT)
+  /// Routing template: [{ workCenterCode, name, stdMinutes, inspection? }]
+  routing        Json?
+  approvedById   String?   @map("approved_by_id") @db.Uuid
+  approvedAt     DateTime? @map("approved_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  lines        BomLine[]
+  workOrders   WorkOrder[]
+
+  @@unique([productId, revision])
+  @@index([organizationId, status])
+  @@map("boms")
+}
+
+model BomLine {
+  id             String  @id @default(cuid(2))
+  organizationId String  @map("organization_id")
+  bomId          String  @map("bom_id")
+  itemId         String  @map("item_id")
+  quantity       Decimal @db.Decimal(14, 4)
+  scrapPct       Decimal @default(0) @map("scrap_pct") @db.Decimal(7, 4)
+  /// Optional formula for configurable products, e.g. "width_cm * 0.012".
+  qtyFormula     String? @map("qty_formula")
+  /// Only include when configuration matches (JSON-logic).
+  condition      Json?
+  notes          String?
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  bom          BillOfMaterials @relation(fields: [bomId], references: [id], onDelete: Cascade)
+  item         Item            @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, bomId])
+  @@map("bom_lines")
+}
+
+enum WorkOrderStatus {
+  PLANNED
+  RELEASED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+model WorkOrder {
+  id               String          @id @default(cuid(2))
+  organizationId   String          @map("organization_id")
+  number           String
+  status           WorkOrderStatus @default(PLANNED)
+  priority         Priority        @default(MEDIUM)
+  salesOrderLineId String?         @map("sales_order_line_id")
+  bomId            String          @map("bom_id")
+  quantity         Decimal         @db.Decimal(14, 3)
+  qtyCompleted     Decimal         @default(0) @map("qty_completed") @db.Decimal(14, 3)
+  plannedStart     DateTime?       @map("planned_start")
+  plannedEnd       DateTime?       @map("planned_end")
+  actualStart      DateTime?       @map("actual_start")
+  actualEnd        DateTime?       @map("actual_end")
+  holdReason       String?         @map("hold_reason")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+  version          Int             @default(0)
+
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  salesOrderLine SalesOrderLine?      @relation(fields: [salesOrderLineId], references: [id], onDelete: SetNull)
+  bom            BillOfMaterials      @relation(fields: [bomId], references: [id], onDelete: Restrict)
+  operations     WorkOrderOperation[]
+  reservations   Reservation[]
+  inspections    Inspection[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId, status, plannedEnd])
+  @@map("work_orders")
+}
+
+enum OperationStatus {
+  PENDING
+  READY
+  IN_PROGRESS
+  PAUSED
+  DONE
+  REWORK
+}
+
+model WorkOrderOperation {
+  id                 String          @id @default(cuid(2))
+  organizationId     String          @map("organization_id")
+  workOrderId        String          @map("work_order_id")
+  sequence           Int
+  name               String
+  workCenterId       String          @map("work_center_id")
+  status             OperationStatus @default(PENDING)
+  stdMinutes         Int             @default(0) @map("std_minutes")
+  actualMinutes      Int             @default(0) @map("actual_minutes")
+  assigneeId         String?         @map("assignee_id") @db.Uuid
+  requiresInspection Boolean         @default(false) @map("requires_inspection")
+  startedAt          DateTime?       @map("started_at")
+  completedAt        DateTime?       @map("completed_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  workOrder    WorkOrder    @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  workCenter   WorkCenter   @relation(fields: [workCenterId], references: [id], onDelete: Restrict)
+  timeLogs     TimeLog[]
+
+  @@unique([workOrderId, sequence])
+  @@index([organizationId, workCenterId, status])
+  @@map("work_order_operations")
+}
+
+model TimeLog {
+  id             String    @id @default(cuid(2))
+  organizationId String    @map("organization_id")
+  operationId    String    @map("operation_id")
+  workerId       String    @map("worker_id") @db.Uuid
+  startedAt      DateTime  @map("started_at")
+  endedAt        DateTime? @map("ended_at")
+  source         String    @default("kiosk")
+  note           String?
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  operation    WorkOrderOperation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, workerId, startedAt])
+  @@index([operationId])
+  @@map("time_logs")
+}

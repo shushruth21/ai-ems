@@ -1,0 +1,149 @@
+// ─── Inventory: items, locations, ledger-based stock ─────────────────────
+
+enum ItemType {
+  RAW_MATERIAL
+  COMPONENT
+  FINISHED_GOOD
+  CONSUMABLE
+  SERVICE
+}
+
+model Item {
+  id             String   @id @default(cuid(2))
+  organizationId String   @map("organization_id")
+  code           String
+  name           String
+  type           ItemType
+  uom            String
+  category       String?
+  standardCost   Decimal  @default(0) @map("standard_cost") @db.Decimal(14, 4)
+  reorderPoint   Decimal? @map("reorder_point") @db.Decimal(14, 3)
+  reorderQty     Decimal? @map("reorder_qty") @db.Decimal(14, 3)
+  leadTimeDays   Int      @default(0) @map("lead_time_days")
+  trackLots      Boolean  @default(false) @map("track_lots")
+  specs          Json?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization        Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product             Product?
+  stockLevels         StockLevel[]
+  movements           StockMovement[]
+  reservations        Reservation[]
+  purchaseLines       PurchaseOrderLine[]
+  bomLines            BomLine[]
+  preferredSupplierId String?             @map("preferred_supplier_id")
+  preferredSupplier   Supplier?           @relation(fields: [preferredSupplierId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, code])
+  @@index([organizationId, type, active])
+  @@map("items")
+}
+
+model Warehouse {
+  id             String  @id @default(cuid(2))
+  organizationId String  @map("organization_id")
+  code           String
+  name           String
+  address        Json?
+  isDefault      Boolean @default(false) @map("is_default")
+  active         Boolean @default(true)
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stockLevels  StockLevel[]
+  movements    StockMovement[]
+  receipts     GoodsReceipt[]
+
+  @@unique([organizationId, code])
+  @@map("warehouses")
+}
+
+/// Materialized balance per item/warehouse — maintained only by stock movements.
+model StockLevel {
+  organizationId String   @map("organization_id")
+  itemId         String   @map("item_id")
+  warehouseId    String   @map("warehouse_id")
+  onHand         Decimal  @default(0) @map("on_hand") @db.Decimal(14, 3)
+  reserved       Decimal  @default(0) @db.Decimal(14, 3)
+  onHold         Decimal  @default(0) @map("on_hold") @db.Decimal(14, 3)
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  version        Int      @default(0)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  item         Item         @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  warehouse    Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, warehouseId])
+  @@index([organizationId])
+  @@map("stock_levels")
+}
+
+enum MovementType {
+  RECEIPT
+  ISSUE_TO_PRODUCTION
+  PRODUCTION_OUTPUT
+  SHIPMENT
+  RETURN_FROM_CUSTOMER
+  RETURN_TO_SUPPLIER
+  TRANSFER_IN
+  TRANSFER_OUT
+  ADJUSTMENT
+  OPENING_BALANCE
+  QC_HOLD
+  QC_RELEASE
+  SCRAP
+}
+
+/// Immutable stock ledger. Never updated or deleted — corrections are new rows.
+model StockMovement {
+  id             BigInt       @id @default(autoincrement())
+  organizationId String       @map("organization_id")
+  itemId         String       @map("item_id")
+  warehouseId    String       @map("warehouse_id")
+  type           MovementType
+  quantity       Decimal      @db.Decimal(14, 3)
+  unitCost       Decimal?     @map("unit_cost") @db.Decimal(14, 4)
+  balanceAfter   Decimal      @map("balance_after") @db.Decimal(14, 3)
+  lotNumber      String?      @map("lot_number")
+  referenceType  String       @map("reference_type")
+  referenceId    String       @map("reference_id")
+  reason         String?
+  idempotencyKey String       @map("idempotency_key")
+  actorId        String?      @map("actor_id") @db.Uuid
+  occurredAt     DateTime     @default(now()) @map("occurred_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  item         Item         @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  warehouse    Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([organizationId, itemId, occurredAt])
+  @@index([organizationId, referenceType, referenceId])
+  @@map("stock_movements")
+}
+
+enum ReservationStatus {
+  ACTIVE
+  CONSUMED
+  RELEASED
+}
+
+model Reservation {
+  id               String            @id @default(cuid(2))
+  organizationId   String            @map("organization_id")
+  itemId           String            @map("item_id")
+  salesOrderLineId String?           @map("sales_order_line_id")
+  workOrderId      String?           @map("work_order_id")
+  quantity         Decimal           @db.Decimal(14, 3)
+  status           ReservationStatus @default(ACTIVE)
+  createdAt        DateTime          @default(now()) @map("created_at")
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  item           Item            @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  salesOrderLine SalesOrderLine? @relation(fields: [salesOrderLineId], references: [id], onDelete: Cascade)
+  workOrder      WorkOrder?      @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, itemId, status])
+  @@map("reservations")
+}

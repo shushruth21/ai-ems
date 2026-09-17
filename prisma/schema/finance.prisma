@@ -1,0 +1,57 @@
+// ─── Finance (accounts receivable, v1) ───────────────────────────────────
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  VOID
+}
+
+model Invoice {
+  id             String        @id @default(cuid(2))
+  organizationId String        @map("organization_id")
+  number         String
+  status         InvoiceStatus @default(DRAFT)
+  accountId      String        @map("account_id")
+  salesOrderId   String?       @map("sales_order_id")
+  currency       String        @db.Char(3)
+  issueDate      DateTime?     @map("issue_date") @db.Date
+  dueDate        DateTime?     @map("due_date") @db.Date
+  subtotal       Decimal       @default(0) @db.Decimal(14, 2)
+  taxTotal       Decimal       @default(0) @map("tax_total") @db.Decimal(14, 2)
+  total          Decimal       @default(0) @db.Decimal(14, 2)
+  amountPaid     Decimal       @default(0) @map("amount_paid") @db.Decimal(14, 2)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  version        Int           @default(0)
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  account      Account       @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  salesOrder   SalesOrder?   @relation(fields: [salesOrderId], references: [id], onDelete: SetNull)
+  lines        InvoiceLine[]
+  payments     Payment[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId, status, dueDate])
+  @@map("invoices")
+}
+
+model InvoiceLine {
+  id             String  @id @default(cuid(2))
+  organizationId String  @map("organization_id")
+  invoiceId      String  @map("invoice_id")
+  lineNo         Int     @map("line_no")
+  description    String
+  quantity       Decimal @db.Decimal(14, 3)
+  unitPrice      Decimal @map("unit_price") @db.Decimal(14, 2)
+  taxRatePct     Decimal @default(0) @map("tax_rate_pct") @db.Decimal(7, 4)
+  lineTotal      Decimal @map("line_total") @db.Decimal(14, 2)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoice      Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@unique([invoiceId, lineNo])
+  @@index([organizationId])
+  @@map("invoice_lines")
+}
