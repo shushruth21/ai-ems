@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-ems.example/schemas/event-envelope.json",
+  "title": "Domain event envelope",
+  "type": "object",
+  "required": ["id", "type", "version", "organizationId", "occurredAt", "actor", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "type": { "type": "string", "pattern": "^[a-z]+(\\.[a-z_]+){2}$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "organizationId": { "type": "string", "minLength": 1 },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "actor": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["USER", "SYSTEM", "AI", "API_KEY"] },
+        "id": { "type": ["string", "null"] }
+      }
+    },
+    "data": { "type": "object" }
+  }
+}

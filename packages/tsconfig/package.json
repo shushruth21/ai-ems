@@ -1,0 +1,13 @@
+{
+  "name": "@ai-ems/tsconfig",
+  "version": "0.0.0",
+  "private": true,
+  "files": [
+    "*.json",
+    "*.ts"
+  ],
+  "exports": {
+    "./*.json": "./*.json",
+    "./vitest-server-only-stub": "./vitest-server-only-stub.ts"
+  }
+}

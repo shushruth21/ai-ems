@@ -1,0 +1,17 @@
+# Default reviewers. Replace @OWNER with your GitHub user or team handles.
+*                                   @OWNER
+
+# Security-sensitive areas require a security reviewer.
+/packages/security/                 @OWNER
+/apps/web/src/proxy.ts              @OWNER
+/supabase/                          @OWNER
+/packages/db/prisma/                @OWNER
+/.github/workflows/                 @OWNER
+/infrastructure/                    @OWNER
+
+# Design system
+/packages/ui/                       @OWNER
+
+# Architecture and governance records
+/docs/architecture/adr/             @OWNER
+/docs/governance/                   @OWNER

@@ -1,0 +1,48 @@
+{
+  "name": "@ai-ems/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./client": "./src/prisma.ts",
+    "./tenant": "./src/tenant.ts",
+    "./tenant-scope": "./src/tenant-scope.ts",
+    "./generated/*": "./src/generated/prisma/*.ts"
+  },
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:validate": "prisma validate",
+    "db:format": "prisma format",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "lint": "eslint --max-warnings=0 .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "clean": "rm -rf src/generated"
+  },
+  "dependencies": {
+    "@ai-ems/config": "workspace:*",
+    "@ai-ems/security": "workspace:*",
+    "@prisma/adapter-pg": "catalog:",
+    "@prisma/client": "catalog:",
+    "pg": "catalog:",
+    "server-only": "catalog:"
+  },
+  "devDependencies": {
+    "@ai-ems/eslint-config": "workspace:*",
+    "@ai-ems/tsconfig": "workspace:*",
+    "@supabase/supabase-js": "catalog:",
+    "@types/node": "catalog:",
+    "@types/pg": "catalog:",
+    "dotenv": "catalog:",
+    "eslint": "catalog:",
+    "prisma": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

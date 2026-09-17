@@ -1,0 +1,14 @@
+# Delivery phases
+
+| Phase | Scope                                                                                                                                                   | Status  | Doc                                                        |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------- |
+| 1     | Foundation                                                                                                                                              | done    | [01-foundation.md](01-foundation.md)                       |
+| 2     | Design system and app shell                                                                                                                             | done    | [02-design-system.md](02-design-system.md)                 |
+| 2.5   | Monorepo restructure and repo governance                                                                                                                | done    | [02b-monorepo-restructure.md](02b-monorepo-restructure.md) |
+| 3     | Authentication                                                                                                                                          | done    | [03-authentication.md](03-authentication.md)               |
+| 4     | Organization and multi-tenancy                                                                                                                          | next    | —                                                          |
+| 5     | Platform (members, roles, audit, notifications, worker)                                                                                                 | planned | —                                                          |
+| 6–19  | CRM → Catalog → Configurator → Sales → Inventory → Procurement → Production → Quality → Logistics → Finance → HR → Marketing → Service → Partner portal | planned | —                                                          |
+| 20    | Analytics (and forecasting service)                                                                                                                     | planned | —                                                          |
+| 21    | AI Copilot (AI service, RAG)                                                                                                                            | planned | —                                                          |
+| 22–24 | Performance, testing hardening, deployment (Terraform)                                                                                                  | planned | —                                                          |

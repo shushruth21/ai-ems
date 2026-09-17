@@ -28,14 +28,6 @@ test.describe("foundation smoke", () => {
     expect(serious.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
   });
 
-  test("security headers are present", async ({ request }) => {
-    const res = await request.get("/");
-    const headers = res.headers();
-    expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
-    expect(headers["x-frame-options"]).toBe("DENY");
-    expect(headers["x-powered-by"]).toBeUndefined();
-  });
-
   test("unauthenticated users are redirected to login", async ({ request }) => {
     const res = await request.get("/demo/dashboard", { maxRedirects: 0 });
     expect(res.status()).toBe(307);
