@@ -8,7 +8,8 @@
     "./client": "./src/prisma.ts",
     "./tenant": "./src/tenant.ts",
     "./tenant-scope": "./src/tenant-scope.ts",
-    "./generated/*": "./src/generated/prisma/*.ts"
+    "./generated/*": "./src/generated/prisma/*.ts",
+    "./auth/*": "./src/auth/*.ts"
   },
   "scripts": {
     "db:generate": "prisma generate",

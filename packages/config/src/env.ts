@@ -21,6 +21,15 @@ const serverSchema = publicSchema.extend({
   AI_MODEL: z.string().optional(),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
   ENABLE_UI_PREVIEW: z.enum(["true", "false"]).optional(),
+  /** Where auth rate-limit counters live. Defaults to postgres in production. */
+  AUTH_RATE_LIMIT_STORE: z.enum(["postgres", "memory"]).optional(),
+  AUTH_RATE_LIMIT_ENABLED: z.enum(["true", "false"]).default("true"),
+  /** HMAC key for hashing emails in audit/rate-limit rows. Falls back to SUPABASE_SECRET_KEY. */
+  AUTH_IDENTITY_SECRET: z.string().min(16).optional(),
+  /** Header set by the edge/proxy that carries the real client IP. */
+  TRUSTED_IP_HEADER: z
+    .enum(["x-forwarded-for", "x-real-ip", "cf-connecting-ip"])
+    .default("x-forwarded-for"),
 });
 
 export type PublicEnv = z.infer<typeof publicSchema>;
@@ -54,6 +63,22 @@ export function parseServerEnv(
     throw new Error(`Invalid server environment variables:\n${format(parsed.error)}`);
   }
   return parsed.data;
+}
+
+export interface AuthSettings {
+  rateLimitEnabled: boolean;
+  rateLimitStore: "postgres" | "memory";
+  identitySecret: string;
+}
+
+/** Derived auth settings with environment-aware defaults. */
+export function authSettings(e: ServerEnv): AuthSettings {
+  return {
+    rateLimitEnabled: e.AUTH_RATE_LIMIT_ENABLED === "true",
+    rateLimitStore:
+      e.AUTH_RATE_LIMIT_STORE ?? (e.NODE_ENV === "production" ? "postgres" : "memory"),
+    identitySecret: e.AUTH_IDENTITY_SECRET ?? e.SUPABASE_SECRET_KEY,
+  };
 }
 
 let cachedPublic: PublicEnv | undefined;

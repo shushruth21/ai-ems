@@ -4,6 +4,7 @@ import type { Route } from "next";
 import { Keyboard, LogOut, Monitor, Moon, Settings, Sun, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { useTransition } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage, initialsOf } from "@ai-ems/ui/components/ui/avatar";
 import {
@@ -22,12 +23,14 @@ import {
   DropdownMenuTrigger,
 } from "@ai-ems/ui/components/ui/dropdown-menu";
 import { joinPath } from "@/config/navigation";
+import { signOut } from "@/features/auth/actions";
 
 import { useShell } from "./shell-context";
 
 export function UserMenu() {
   const { user, basePath, preview, setShortcutsOpen } = useShell();
   const { theme, setTheme } = useTheme();
+  const [signingOut, startSignOut] = useTransition();
 
   return (
     <DropdownMenu>
@@ -86,7 +89,11 @@ export function UserMenu() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem disabled={preview} variant="danger">
+        <DropdownMenuItem
+          disabled={preview || signingOut}
+          variant="danger"
+          onSelect={() => startSignOut(() => signOut())}
+        >
           <LogOut />
           Sign out
         </DropdownMenuItem>

@@ -27,7 +27,7 @@ A module or phase is done when all of the following hold:
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Sign in        | Given a verified account, when I submit a valid email and password, then I land on my intended page (or `/account`), with a session cookie set   |
 | Wrong password | Given any account, when the password is wrong, then I see a generic error that doesn't reveal whether the email exists                           |
-| Rate limit     | Given 5 failed attempts in 15 minutes from one IP and email, then further attempts are refused with a retry-after message                        |
+| Rate limit     | Given 10 attempts in 10 minutes for one email (or 30 from one IP), then further attempts are refused with a "too many attempts" message          |
 | Magic link     | When I request a link, then I see "check your email" whether or not the account exists                                                           |
 | Sign up        | When I sign up with a strong password, then I'm asked to verify my email. Weak passwords are rejected with guidance.                             |
 | Reset          | When I request a reset, the response doesn't reveal the account. The link lets me set a new password once, and my other sessions are signed out. |

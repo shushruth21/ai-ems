@@ -1,0 +1,51 @@
+// ─── Authentication: security activity + rate limiting ──────────────────
+// Identity itself lives in Supabase Auth (auth.users); Profile mirrors it.
+
+enum AuthEventType {
+  SIGN_IN_SUCCEEDED
+  SIGN_IN_FAILED
+  SIGN_UP
+  MAGIC_LINK_REQUESTED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_CHANGED
+  EMAIL_VERIFIED
+  OAUTH_STARTED
+  OAUTH_SUCCEEDED
+  MFA_ENROLLED
+  MFA_VERIFIED
+  MFA_FAILED
+  MFA_REMOVED
+  SIGNED_OUT
+  SIGNED_OUT_EVERYWHERE
+  RATE_LIMITED
+}
+
+/// Append-only security log, not tenant-scoped (auth happens before an org is chosen).
+/// Emails are stored only as an HMAC (`identityHash`), never in clear text.
+model AuthEvent {
+  id           BigInt        @id @default(autoincrement())
+  profileId    String?       @map("profile_id") @db.Uuid
+  identityHash String?       @map("identity_hash")
+  type         AuthEventType
+  ip           String?
+  userAgent    String?       @map("user_agent")
+  metadata     Json?
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  @@index([profileId, createdAt(sort: Desc)])
+  @@index([identityHash, createdAt(sort: Desc)])
+  @@index([createdAt])
+  @@map("auth_events")
+}
+
+/// Fixed-window counters shared by all app instances. Written with a single
+/// atomic upsert; expired rows are purged opportunistically.
+model RateLimitBucket {
+  key         String   @id
+  count       Int
+  windowStart DateTime @map("window_start")
+  expiresAt   DateTime @map("expires_at")
+
+  @@index([expiresAt])
+  @@map("rate_limit_buckets")
+}

@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
   // Internal packages ship TypeScript source.
   transpilePackages: [
     "@ai-ems/config",
+    "@ai-ems/contracts",
     "@ai-ems/db",
     "@ai-ems/domain",
     "@ai-ems/observability",

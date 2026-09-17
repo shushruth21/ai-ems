@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - tools/*
 
 catalog:
   "@hookform/resolvers": ^5.9.1

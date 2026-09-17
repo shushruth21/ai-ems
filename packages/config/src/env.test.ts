@@ -1,4 +1,4 @@
-import { parsePublicEnv, parseServerEnv } from "./env";
+import { authSettings, parsePublicEnv, parseServerEnv } from "./env";
 
 const valid = {
   NEXT_PUBLIC_SUPABASE_URL: "https://ref.supabase.co",
@@ -24,5 +24,23 @@ describe("env", () => {
     expect(() => parsePublicEnv({ NEXT_PUBLIC_SUPABASE_URL: "not-a-url" })).toThrow(
       /Invalid public/,
     );
+  });
+
+  it("derives auth settings per environment", () => {
+    expect(authSettings(parseServerEnv(valid))).toEqual({
+      rateLimitEnabled: true,
+      rateLimitStore: "memory",
+      identitySecret: "sb_secret_x",
+    });
+    const prod = authSettings(
+      parseServerEnv({ ...valid, NODE_ENV: "production", AUTH_IDENTITY_SECRET: "x".repeat(32) }),
+    );
+    expect(prod.rateLimitStore).toBe("postgres");
+    expect(prod.identitySecret).toBe("x".repeat(32));
+    expect(
+      authSettings(
+        parseServerEnv({ ...valid, NODE_ENV: "production", AUTH_RATE_LIMIT_STORE: "memory" }),
+      ).rateLimitStore,
+    ).toBe("memory");
   });
 });

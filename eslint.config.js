@@ -11,5 +11,11 @@ export default defineConfig([
   ...base,
   { languageOptions: { globals: { ...globals.node } } },
   { files: ["tools/**", "tests/**"], rules: { "no-console": "off" } },
-  globalIgnores(["apps/**", "packages/*/src/**", "packages/*/tests/**", "packages/*/prisma/**"]),
+  globalIgnores([
+    "apps/**",
+    "tools/*/src/**",
+    "packages/*/src/**",
+    "packages/*/tests/**",
+    "packages/*/prisma/**",
+  ]),
 ]);

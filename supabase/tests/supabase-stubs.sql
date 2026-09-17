@@ -19,3 +19,9 @@ create or replace function storage.foldername(name text) returns text[] language
   select string_to_array(name, '/')
 $$;
 grant usage on schema auth, storage to authenticated;
+create or replace function auth.jwt() returns jsonb language sql stable as $$
+  select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb
+$$;
+create table if not exists auth.mfa_factors (
+  id uuid primary key default gen_random_uuid(), user_id uuid not null, status text not null
+);

@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { isAuthPage, isPublicPath, safeRedirectPath } from "@/lib/routes";
-import { buildCsp, createNonce } from "@ai-ems/security/http/csp";
+import { decideRoute, isPreviewEnabled } from "@/lib/routes";
 import { updateSession } from "@ai-ems/security/authentication/supabase/proxy";
+import { buildCsp, createNonce } from "@ai-ems/security/http/csp";
 
 export async function proxy(request: NextRequest) {
   const nonce = createNonce();
@@ -16,21 +16,22 @@ export async function proxy(request: NextRequest) {
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
 
-  const { response, userId } = await updateSession(request, requestHeaders);
-  const { pathname, search } = request.nextUrl;
+  const { response, userId, mfaRequired } = await updateSession(request, requestHeaders);
+  const { pathname, search, searchParams } = request.nextUrl;
+
+  const decision = decideRoute({
+    pathname,
+    search,
+    next: searchParams.get("next"),
+    userId,
+    mfaRequired,
+    previewEnabled: isPreviewEnabled(),
+  });
 
   let result: NextResponse = response;
-  if (!userId && !isPublicPath(pathname)) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = `?next=${encodeURIComponent(safeRedirectPath(pathname + search))}`;
-    result = NextResponse.redirect(url);
-    response.cookies.getAll().forEach((c) => result.cookies.set(c));
-  } else if (userId && isAuthPage(pathname)) {
-    const url = request.nextUrl.clone();
-    url.pathname = safeRedirectPath(request.nextUrl.searchParams.get("next"));
-    url.search = "";
-    result = NextResponse.redirect(url);
+  if (decision.action === "redirect") {
+    result = NextResponse.redirect(new URL(decision.to, request.url));
+    // Keep any refreshed session cookies.
     response.cookies.getAll().forEach((c) => result.cookies.set(c));
   }
 

@@ -1,0 +1,26 @@
+{
+  "name": "@ai-ems/auth-emulator",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Local Supabase Auth (GoTrue) emulator for end-to-end tests. Not for production.",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "lint": "eslint --max-warnings=0 .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@ai-ems/eslint-config": "workspace:*",
+    "@ai-ems/tsconfig": "workspace:*",
+    "@supabase/supabase-js": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
