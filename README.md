@@ -6,6 +6,7 @@ Multi-tenant SaaS for make-to-order businesses. It covers CRM, the product confi
 
 - Architecture: [`docs/01-architecture-blueprint.md`](docs/01-architecture-blueprint.md)
 - Phase 1 guide: [`docs/02-phase-1-foundation.md`](docs/02-phase-1-foundation.md)
+- Phase 2 guide: [`docs/03-phase-2-design-system.md`](docs/03-phase-2-design-system.md)
 
 ## Quick start
 
@@ -17,7 +18,7 @@ npm run db:migrate           # create tables (first run: name the migration "ini
 psql "$DIRECT_URL" -f supabase/migrations/0001_rls_foundation.sql
 psql "$DIRECT_URL" -f supabase/migrations/0002_storage.sql
 npm run db:seed              # permission catalog + "Demo Industries" sample tenant
-npm run dev                  # http://localhost:3000
+npm run dev                  # http://localhost:3000 — UI sandbox at /preview
 ```
 
 ## Scripts
@@ -36,11 +37,16 @@ npm run dev                  # http://localhost:3000
 prisma/schema/*.prisma   multi-file schema (52 models)
 prisma/seed.ts           generic sample data (no hard-coded credentials)
 supabase/migrations/     RLS, storage buckets, triggers (applied after Prisma)
-src/app/                 routes (App Router), proxy-driven auth + CSP
+src/app/                 routes (App Router), proxy-driven auth + CSP; /preview UI sandbox
+src/components/          ui/ (design system) · data/ (tables, KPIs) · layout/ (app shell)
+src/config/              navigation, quick actions, shared constants
+src/features/            feature modules (preview sandbox today)
+src/hooks/ · src/types/  shared hooks and types
+src/styles/              tokens (CSS + TS), fonts
 src/domain/              pure business logic: money, pricing, workflows, numbering
 src/server/              server-only: Prisma, tenant scoping, authorization
 src/lib/                 env validation, Supabase clients, security helpers
-tests/                   unit setup, e2e specs
+tests/                   setup, component tests, e2e specs
 docker/                  production Dockerfile + local compose
 ```
 

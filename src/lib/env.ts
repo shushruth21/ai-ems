@@ -20,6 +20,7 @@ const serverSchema = publicSchema.extend({
   ANTHROPIC_API_KEY: z.string().optional(),
   AI_MODEL: z.string().optional(),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+  ENABLE_UI_PREVIEW: z.enum(["true", "false"]).optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicSchema>;
