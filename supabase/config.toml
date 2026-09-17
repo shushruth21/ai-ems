@@ -1,0 +1,92 @@
+# Supabase CLI configuration for local development (`supabase start`).
+# Hosted projects: mirror these values in Dashboard → Authentication.
+# Schema is owned by Prisma (packages/db); SQL in ./migrations is applied by
+# infrastructure/scripts/apply-supabase-sql.sh, not by `supabase db push`.
+
+project_id = "ai-ems"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+# Local mail catcher: http://localhost:54324
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+# Email and OAuth redirects must land on these origins (wildcards allowed).
+additional_redirect_urls = ["http://localhost:3000/**", "http://127.0.0.1:3000/**"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+enable_anonymous_sign_ins = false
+minimum_password_length = 12
+# NIST SP 800-63B: length + deny-lists, no composition rules (see packages/contracts).
+password_requirements = ""
+
+[auth.rate_limit]
+email_sent = 30
+sign_in_sign_ups = 30
+token_verifications = 30
+token_refresh = 150
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+secure_password_change = true
+max_frequency = "60s"
+otp_expiry = 3600
+
+[auth.email.template.confirmation]
+subject = "Confirm your AI EMS account"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Your AI EMS sign-in link"
+content_path = "./supabase/templates/magic-link.html"
+
+[auth.email.template.recovery]
+subject = "Reset your AI EMS password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new email address"
+content_path = "./supabase/templates/email-change.html"
+
+[auth.email.template.invite]
+subject = "You've been invited to AI EMS"
+content_path = "./supabase/templates/invite.html"
+
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.external.google]
+enabled = false
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
+skip_nonce_check = false
+
+[auth.external.azure]
+enabled = false
+client_id = "env(SUPABASE_AUTH_AZURE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_AZURE_SECRET)"
+url = "https://login.microsoftonline.com/common/v2.0"

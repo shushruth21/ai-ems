@@ -4,7 +4,7 @@
 | ---------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | **Restricted**   | Passwords (never stored by us), MFA secrets (Supabase), API key material, service keys | Never logged, never sent to the LLM, never rendered                                  |
 | **Confidential** | Customer contact details (email, phone), prices, margins, payroll data                 | Tenant-isolated; masked for roles without reveal permission; minimised in AI prompts |
-| **Internal**     | Orders, stock, work orders, audit events                                               | Tenant-isolated; exportable by permitted roles                                       |
+| **Internal**     | Orders, stock, work orders, audit events, security events (IP, user agent)             | Tenant-isolated; exportable by permitted roles                                       |
 | **Public**       | Marketing pages, public product catalogs (if published)                                | —                                                                                    |
 
 ## Rules

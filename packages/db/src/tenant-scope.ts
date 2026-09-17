@@ -4,7 +4,14 @@
  */
 
 /** Models that are NOT tenant-owned (no organizationId column, or the tenant itself). */
-export const GLOBAL_MODELS = new Set(["Organization", "Profile", "Permission", "RolePermission"]);
+export const GLOBAL_MODELS = new Set([
+  "Organization",
+  "Profile",
+  "Permission",
+  "RolePermission",
+  "AuthEvent",
+  "RateLimitBucket",
+]);
 
 const WHERE_OPS = new Set([
   "findUnique",

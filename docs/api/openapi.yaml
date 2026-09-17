@@ -33,20 +33,39 @@ paths:
       parameters:
         - { name: code, in: query, required: true, schema: { type: string } }
         - { name: next, in: query, schema: { type: string } }
+        - { name: sb_flow_id, in: query, schema: { type: string } }
       responses:
-        "307": { description: Redirect to `next` (same-origin only) or to sign-in with an error }
+        "303":
+          description: >-
+            Redirect to `next` (same-origin only), to `/login/mfa` when the account has a second factor,
+            or to `/login?error=…`.
   /auth/confirm:
     get:
-      summary: Email link verification (sign-up, magic link, recovery, email change)
+      summary: Email link landing page (HTML). Shows a Continue button; nothing is verified on GET.
+      description: >-
+        Pressing Continue calls a server action that verifies the token hash (so mail scanners that
+        pre-fetch links can't consume it). Recovery links continue to `/reset-password`.
       parameters:
         - { name: token_hash, in: query, required: true, schema: { type: string } }
         - name: type
           in: query
           required: true
           schema: { type: string, enum: [signup, magiclink, recovery, email_change, invite, email] }
+        - name: next
+          in: query
+          description: Relative path or absolute URL on the app's own origin.
+          schema: { type: string }
+      responses:
+        "200": { description: Confirmation page }
+  /auth/session-expired:
+    get:
+      summary: Clears a revoked session's cookies, then redirects
+      description: >-
+        Signs out locally only when Supabase Auth confirms the session no longer exists.
+      parameters:
         - { name: next, in: query, schema: { type: string } }
       responses:
-        "307": { description: Redirect after verification }
+        "303": { description: Redirect to `next`, or to `/login?error=session_expired` }
 components:
   schemas:
     Health:

@@ -17,7 +17,7 @@ cp .env.example .env         # Supabase + database values
 make doctor                  # checks toolchain and .env
 make db-deploy               # Prisma migrations + Supabase SQL (RLS, storage, triggers)
 make db-seed                 # permission catalog + "Demo Industries" sample tenant
-make dev                     # http://localhost:3000 — UI sandbox at /preview
+make dev                     # http://localhost:3000 — sign in at /login, UI sandbox at /preview
 ```
 
 Run `make help` to list every task.
@@ -30,19 +30,20 @@ ai-ems/
 │   └── web/                  Next.js app: routes, server actions, feature UI, app shell
 ├── packages/
 │   ├── domain/               pure business logic (money, pricing, workflows, numbering)
-│   ├── db/                   Prisma schema (52 models), tenant-scoped client, seed, RLS tests
-│   ├── security/             permissions & authorization, Supabase auth clients, CSP
+│   ├── contracts/            shared Zod input contracts, password policy
+│   ├── db/                   Prisma schema (54 models), tenant-scoped client, auth repositories, RLS tests
+│   ├── security/             permissions & authorization, Supabase auth, rate limiting, CSP
 │   ├── ui/                   design system: tokens, 32 primitives, data table, KPI cards
 │   ├── config/               env validation, feature flags
 │   ├── observability/        structured logging
 │   ├── tsconfig/             shared TypeScript presets
 │   └── eslint-config/        shared lint rules (domain purity enforced)
-├── supabase/                 RLS/storage/trigger SQL + test fixtures
+├── supabase/                 RLS/storage/auth SQL, Auth config + email templates, test fixtures
 ├── services/ · ml/ · evals/  reserved for the Python AI services (Phases 20–21)
 ├── config/                   per-environment templates
 ├── infrastructure/           Docker (turbo-pruned standalone image), scripts, Terraform (Phase 24)
 ├── tests/                    cross-app suites: e2e, security
-├── tools/                    developer tooling (doctor)
+├── tools/                    developer tooling (doctor), Supabase Auth emulator for e2e
 ├── docs/                     architecture + ADRs, product, phases, operations, governance, API
 └── .github/                  CI, security scans, container build, preview/staging/production deploys
 ```

@@ -1,4 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
+
+import { Button } from "@ai-ems/ui/components/ui/button";
 
 const modules = [
   "CRM",
@@ -13,7 +16,7 @@ const modules = [
   "AI Copilot",
 ];
 
-/** Temporary foundation page — replaced by the marketing site and app shell in Phase 2. */
+/** Temporary landing page — replaced by the marketing site in a later phase. */
 export default function HomePage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-3xl flex-col justify-center gap-10 px-6 py-16">
@@ -26,9 +29,17 @@ export default function HomePage() {
           One platform from first lead to final delivery.
         </h1>
         <p className="max-w-xl text-lg text-pretty text-muted-foreground">
-          AI-Powered Enterprise Management System. Foundation build — the workspace, modules and
-          copilot are delivered in the upcoming phases.
+          AI-Powered Enterprise Management System. Accounts and security are live; the workspace,
+          modules and copilot arrive in the upcoming phases.
         </p>
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <Button asChild size="lg">
+          <Link href="/login">Sign in</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline">
+          <Link href="/signup">Create account</Link>
+        </Button>
       </div>
       <ul className="flex flex-wrap gap-2" aria-label="Planned modules">
         {modules.map((m) => (
