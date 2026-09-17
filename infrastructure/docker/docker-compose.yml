@@ -1,0 +1,36 @@
+# Local stack: app + Postgres. For Auth/Storage/Realtime use the Supabase CLI
+# (`npx supabase start`) or a hosted Supabase project, and point .env at it.
+name: ai-ems
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: aiems
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-locally}
+      POSTGRES_DB: aiems
+    ports: ["5432:5432"]
+    volumes: [db-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aiems"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
+    env_file: ../../.env
+    environment:
+      DATABASE_URL: postgresql://aiems:${POSTGRES_PASSWORD:-change-me-locally}@db:5432/aiems
+    ports: ["3000:3000"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

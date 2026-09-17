@@ -1,9 +1,12 @@
 .git
-.next
-node_modules
-src/generated
-coverage
+**/node_modules
+**/.next
+**/.turbo
+**/coverage
+packages/db/src/generated
 playwright-report
 test-results
+artifacts
+docs
 .env*
 !.env.example

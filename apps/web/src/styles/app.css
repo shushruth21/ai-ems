@@ -1,0 +1,8 @@
+/*
+ * App stylesheet: the shared design system plus this app's sources.
+ * Tailwind v4 skips node_modules during auto-detection, so workspace
+ * packages that render class names are registered with @source.
+ */
+@import "@ai-ems/ui/styles/globals.css";
+
+@source "../../../../packages/ui/src";

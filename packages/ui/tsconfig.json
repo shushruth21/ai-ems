@@ -1,0 +1,4 @@
+{
+  "extends": "@ai-ems/tsconfig/react-library.json",
+  "include": ["src", "tests", "*.ts"]
+}

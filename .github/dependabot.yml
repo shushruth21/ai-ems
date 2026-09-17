@@ -1,0 +1,24 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      radix-and-ui:
+        patterns: ["radix-ui", "cmdk", "sonner", "lucide-react", "framer-motion"]
+      testing:
+        patterns:
+          ["vitest", "@vitest/*", "@testing-library/*", "@playwright/test", "@axe-core/*", "jsdom"]
+      lint-and-format:
+        patterns:
+          ["eslint*", "typescript-eslint", "prettier*", "@commitlint/*", "lint-staged", "husky"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /infrastructure/docker
+    schedule:
+      interval: weekly

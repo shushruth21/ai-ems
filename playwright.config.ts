@@ -4,7 +4,8 @@ const port = Number(process.env.PORT ?? 3000);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${port}`;
 
 export default defineConfig({
-  testDir: "./tests/e2e",
+  testDir: "./tests",
+  testMatch: ["e2e/**/*.spec.ts", "security/**/*.spec.ts"],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -24,7 +25,7 @@ export default defineConfig({
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
     : {
-        command: `npm run build && npm run start -- -p ${port}`,
+        command: `pnpm --filter @ai-ems/web build && pnpm --filter @ai-ems/web start -p ${port}`,
         env: { ENABLE_UI_PREVIEW: "true" },
         url: `${baseURL}/api/health`,
         reuseExistingServer: !process.env.CI,
