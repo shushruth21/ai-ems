@@ -261,9 +261,16 @@ async function seedOwner(organizationId: string) {
     if (error) throw error;
     user = data.user;
   }
+  // The local auth emulator can be reset, which re-creates the account with a
+  // new id. Re-point the demo profile (and its memberships) at the new one.
+  const stale = await prisma.profile.findUnique({ where: { email } });
+  if (stale && stale.id !== user.id) {
+    console.log(`• demo owner ${email} was re-created in Auth — replacing its profile`);
+    await prisma.profile.delete({ where: { id: stale.id } });
+  }
   await prisma.profile.upsert({
     where: { id: user.id },
-    update: {},
+    update: { email, fullName: "Demo Owner" },
     create: { id: user.id, email, fullName: "Demo Owner" },
   });
   const owner = await prisma.role.findUniqueOrThrow({
