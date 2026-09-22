@@ -1,5 +1,6 @@
 import {
   decideRoute,
+  orgSlugFromPath,
   isAuthPage,
   isPreviewEnabled,
   isPublicPath,
@@ -22,10 +23,10 @@ describe("routes", () => {
 
   it("blocks open redirects", () => {
     expect(safeRedirectPath("/demo/sales?tab=open")).toBe("/demo/sales?tab=open");
-    expect(safeRedirectPath("https://evil.example")).toBe("/account");
-    expect(safeRedirectPath("//evil.example")).toBe("/account");
-    expect(safeRedirectPath("/\\evil.example")).toBe("/account");
-    expect(safeRedirectPath("/ok\nSet-Cookie:x")).toBe("/account");
+    expect(safeRedirectPath("https://evil.example")).toBe("/app");
+    expect(safeRedirectPath("//evil.example")).toBe("/app");
+    expect(safeRedirectPath("/\\evil.example")).toBe("/app");
+    expect(safeRedirectPath("/ok\nSet-Cookie:x")).toBe("/app");
     expect(safeRedirectPath("/a/../b")).toBe("/b");
     expect(safeRedirectPath(null, "/x")).toBe("/x");
   });
@@ -33,22 +34,22 @@ describe("routes", () => {
   it("accepts absolute redirect URLs on the app origin only", () => {
     const app = "https://app.example";
     expect(redirectPathFromUrl("https://app.example/account?x=1", app)).toBe("/account?x=1");
-    expect(redirectPathFromUrl("https://evil.example/account", app)).toBe("/account");
+    expect(redirectPathFromUrl("https://evil.example/account", app)).toBe("/app");
     expect(redirectPathFromUrl("/crm", app)).toBe("/crm");
-    expect(redirectPathFromUrl("javascript:alert(1)", app)).toBe("/account");
+    expect(redirectPathFromUrl("javascript:alert(1)", app)).toBe("/app");
     expect(redirectPathFromUrl(null, app, "/x")).toBe("/x");
   });
 
   it("builds next parameters", () => {
     expect(withNext("/login", "/crm?x=1")).toBe("/login?next=%2Fcrm%3Fx%3D1");
-    expect(withNext("/login", "/account")).toBe("/login");
+    expect(withNext("/login", "/app")).toBe("/login");
     expect(withNext("/login", "https://evil.example")).toBe("/login");
   });
 });
 
 describe("decideRoute", () => {
   const base: RouteRequest = {
-    pathname: "/account",
+    pathname: "/app",
     search: "",
     next: null,
     userId: null,
@@ -62,7 +63,7 @@ describe("decideRoute", () => {
       action: "redirect",
       to: "/login?next=%2Fcrm%2Fleads%3Fq%3Da",
     });
-    expect(decide({ pathname: "/account" })).toEqual({ action: "redirect", to: "/login" });
+    expect(decide({ pathname: "/app" })).toEqual({ action: "redirect", to: "/login" });
     expect(decide({ pathname: "/login" })).toEqual({ action: "continue" });
     expect(decide({ pathname: "/login/mfa", next: "/crm" })).toEqual({
       action: "redirect",
@@ -78,17 +79,17 @@ describe("decideRoute", () => {
     });
     expect(decide({ ...user, pathname: "/signup" })).toEqual({
       action: "redirect",
-      to: "/account",
+      to: "/app",
     });
     expect(decide({ ...user, pathname: "/login/mfa" })).toEqual({
       action: "redirect",
-      to: "/account",
+      to: "/app",
     });
     expect(decide({ ...user, pathname: "/login", next: "https://evil.example" })).toEqual({
       action: "redirect",
-      to: "/account",
+      to: "/app",
     });
-    expect(decide({ ...user, pathname: "/account" })).toEqual({ action: "continue" });
+    expect(decide({ ...user, pathname: "/app" })).toEqual({ action: "continue" });
   });
 
   it("gates everything private behind MFA when a factor is pending", () => {
@@ -130,5 +131,16 @@ describe("preview flag", () => {
     expect(isPublicPath("/preview/demo/dashboard", true)).toBe(true);
     expect(isPublicPath("/preview/demo/dashboard", false)).toBe(false);
     expect(isPublicPath("/previewer", true)).toBe(false);
+  });
+});
+
+describe("orgSlugFromPath", () => {
+  it("recognises workspace paths only", () => {
+    expect(orgSlugFromPath("/acme/dashboard")).toBe("acme");
+    expect(orgSlugFromPath("/acme")).toBe("acme");
+    expect(orgSlugFromPath("/login")).toBeNull();
+    expect(orgSlugFromPath("/account")).toBeNull();
+    expect(orgSlugFromPath("/_next/static/x.js")).toBeNull();
+    expect(orgSlugFromPath("/")).toBeNull();
   });
 });

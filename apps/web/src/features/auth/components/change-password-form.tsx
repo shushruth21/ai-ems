@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -16,9 +17,9 @@ import {
 } from "@ai-ems/ui/components/ui/form";
 
 import { changePassword } from "../actions";
-import { useActionForm } from "../use-action-form";
+import { useActionForm } from "@/lib/use-action-form";
 
-import { FormFeedback } from "./form-feedback";
+import { FormFeedback } from "@/components/forms/form-feedback";
 import { NewPasswordFields } from "./new-password-fields";
 import { PasswordInput } from "./password-input";
 
@@ -46,9 +47,9 @@ export function ChangePasswordForm({
     return (
       <p className="text-sm text-muted-foreground">
         You sign in with a connected account or email links. To add a password, use{" "}
-        <a href="/forgot-password" className="underline underline-offset-4">
+        <Link href="/forgot-password" className="underline underline-offset-4">
           reset password
-        </a>
+        </Link>
         .
       </p>
     );

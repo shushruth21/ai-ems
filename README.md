@@ -10,9 +10,18 @@ Multi-tenant SaaS for make-to-order businesses. It covers the full cycle from le
 
 ## Quick start
 
+**Local, with nothing to configure** (PostgreSQL via Docker + a built-in Supabase Auth emulator):
+
 ```bash
 corepack enable
-make install                 # pnpm install + Prisma client
+pnpm install
+pnpm dev:local               # database, migrations, seed, auth emulator and the app
+                             # → http://localhost:3000, sign in with the printed demo account
+```
+
+**Against your own Supabase project:**
+
+```bash
 cp .env.example .env         # Supabase + database values
 make doctor                  # checks toolchain and .env
 make db-deploy               # Prisma migrations + Supabase SQL (RLS, storage, triggers)
@@ -29,9 +38,9 @@ ai-ems/
 ├── apps/
 │   └── web/                  Next.js app: routes, server actions, feature UI, app shell
 ├── packages/
-│   ├── domain/               pure business logic (money, pricing, workflows, numbering)
+│   ├── domain/               pure business logic (money, pricing, workflows, numbering, org policy)
 │   ├── contracts/            shared Zod input contracts, password policy
-│   ├── db/                   Prisma schema (54 models), tenant-scoped client, auth repositories, RLS tests
+│   ├── db/                   Prisma schema (54 models) + migrations, tenant client, platform repositories
 │   ├── security/             permissions & authorization, Supabase auth, rate limiting, CSP
 │   ├── ui/                   design system: tokens, 32 primitives, data table, KPI cards
 │   ├── config/               env validation, feature flags
@@ -43,7 +52,7 @@ ai-ems/
 ├── config/                   per-environment templates
 ├── infrastructure/           Docker (turbo-pruned standalone image), scripts, Terraform (Phase 24)
 ├── tests/                    cross-app suites: e2e, security
-├── tools/                    developer tooling (doctor), Supabase Auth emulator for e2e
+├── tools/                    developer tooling (doctor, dev:local), Supabase Auth emulator
 ├── docs/                     architecture + ADRs, product, phases, operations, governance, API
 └── .github/                  CI, security scans, container build, preview/staging/production deploys
 ```

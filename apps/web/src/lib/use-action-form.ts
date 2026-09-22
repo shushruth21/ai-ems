@@ -6,7 +6,7 @@ import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
 import type { ActionResult } from "@ai-ems/contracts/auth";
 
 export interface FormFeedback {
-  tone: "danger" | "success";
+  tone: "danger" | "success" | "warning";
   message: string;
 }
 

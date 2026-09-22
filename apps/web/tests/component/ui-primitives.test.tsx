@@ -37,7 +37,7 @@ describe("Button", () => {
   it("renders its child with asChild", () => {
     render(
       <Button asChild variant="outline">
-        <a href="/x">Go</a>
+        <a href="https://example.com/x">Go</a>
       </Button>,
     );
     const link = screen.getByRole("link", { name: "Go" });

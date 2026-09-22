@@ -9,5 +9,6 @@
 | [0005](0005-design-system-radix-shadcn-tanstack-table.md) | Design system on Radix and TanStack Table v9      | accepted |
 | [0006](0006-python-services-for-ai-and-ingestion.md)      | Python services for AI, ingestion and forecasting | proposed |
 | [0007](0007-authentication-flows.md)                      | Authentication flows, MFA and rate limiting       | accepted |
+| [0008](0008-workspace-routing-and-membership.md)          | Workspace routing, membership and invitations     | accepted |
 
 New decisions: copy [0000-template.md](0000-template.md).

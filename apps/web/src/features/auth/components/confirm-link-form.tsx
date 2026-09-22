@@ -8,9 +8,9 @@ import type { confirmLinkSchema } from "@ai-ems/contracts/auth";
 import { Button } from "@ai-ems/ui/components/ui/button";
 
 import { confirmEmailLink } from "../actions";
-import type { FormFeedback as Feedback } from "../use-action-form";
+import type { FormFeedback as Feedback } from "@/lib/use-action-form";
 
-import { FormFeedback } from "./form-feedback";
+import { FormFeedback } from "@/components/forms/form-feedback";
 
 const LABELS: Record<string, string> = {
   recovery: "Continue to reset your password",

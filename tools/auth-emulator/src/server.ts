@@ -1,5 +1,7 @@
 import {
   createHash,
+  createPrivateKey,
+  createPublicKey,
   generateKeyPairSync,
   randomBytes,
   randomUUID,
@@ -7,6 +9,7 @@ import {
   timingSafeEqual,
   type KeyObject,
 } from "node:crypto";
+import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 
@@ -26,6 +29,23 @@ export interface EmulatorOptions {
   minPasswordLength?: number;
   accessTokenTtlSeconds?: number;
   now?: () => number;
+  /**
+   * Persist users, sessions, pending links and the signing key to this JSON
+   * file so local development survives restarts. Omit in tests.
+   */
+  stateFile?: string;
+  /** Called for every "sent" email (e.g. to print links in a dev terminal). */
+  onEmail?: (email: SentEmail) => void;
+}
+
+interface PersistedState {
+  version: 1;
+  kid: string;
+  privateJwk: Record<string, unknown>;
+  users: User[];
+  sessions: Array<Omit<Session, "refreshTokens"> & { refreshTokens: string[] }>;
+  tokenHashes: Array<[string, { userId: string; kind: EmailKind; expiresAt: number }]>;
+  emails: SentEmail[];
 }
 
 interface Factor {
@@ -101,8 +121,17 @@ export function createAuthEmulator(options: EmulatorOptions = {}) {
   const now = options.now ?? (() => Date.now());
   const minPasswordLength = options.minPasswordLength ?? 6;
   const ttl = options.accessTokenTtlSeconds ?? 3600;
-  const kid = randomUUID();
-  const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
+  const saved: PersistedState | null =
+    options.stateFile && existsSync(options.stateFile)
+      ? (JSON.parse(readFileSync(options.stateFile, "utf8")) as PersistedState)
+      : null;
+  const kid = saved?.kid ?? randomUUID();
+  const { privateKey, publicKey } = saved
+    ? (() => {
+        const key = createPrivateKey({ key: saved.privateJwk, format: "jwk" });
+        return { privateKey: key, publicKey: createPublicKey(key) };
+      })()
+    : generateKeyPairSync("ec", { namedCurve: "P-256" });
   const jwk = {
     ...publicKey.export({ format: "jwk" }),
     kid,
@@ -119,6 +148,32 @@ export function createAuthEmulator(options: EmulatorOptions = {}) {
   const authCodes = new Map<string, AuthCode>();
   let emails: SentEmail[] = [];
   let issuer = "http://127.0.0.1/auth/v1";
+
+  if (saved) {
+    for (const u of saved.users) users.set(u.id, u);
+    for (const s of saved.sessions) {
+      sessions.set(s.id, { ...s, refreshTokens: new Set(s.refreshTokens) });
+      for (const t of s.refreshTokens) refreshIndex.set(t, s.id);
+    }
+    for (const [hash, entry] of saved.tokenHashes) tokenHashes.set(hash, entry);
+    emails = saved.emails;
+  }
+
+  function persist() {
+    if (!options.stateFile) return;
+    const state: PersistedState = {
+      version: 1,
+      kid,
+      privateJwk: privateKey.export({ format: "jwk" }) as Record<string, unknown>,
+      users: [...users.values()],
+      sessions: [...sessions.values()].map((s) => ({ ...s, refreshTokens: [...s.refreshTokens] })),
+      tokenHashes: [...tokenHashes.entries()].filter(([, e]) => e.expiresAt > now()),
+      emails: emails.slice(-200),
+    };
+    const tmp = `${options.stateFile}.tmp`;
+    writeFileSync(tmp, JSON.stringify(state), { mode: 0o600 });
+    renameSync(tmp, options.stateFile);
+  }
 
   const iso = () => new Date(now()).toISOString();
   const findByEmail = (email: string) =>
@@ -151,7 +206,16 @@ export function createAuthEmulator(options: EmulatorOptions = {}) {
     const token = randomBytes(24).toString("hex");
     const tokenHash = createHash("sha224").update(`${user.email}${token}`).digest("hex");
     tokenHashes.set(tokenHash, { userId: user.id, kind, expiresAt: now() + 3_600_000 });
-    emails.push({ to: user.email, kind, tokenHash, type: kind, redirectTo, sentAt: iso() });
+    const email: SentEmail = {
+      to: user.email,
+      kind,
+      tokenHash,
+      type: kind,
+      redirectTo,
+      sentAt: iso(),
+    };
+    emails.push(email);
+    options.onEmail?.(email);
   }
 
   function publicUser(user: User) {
@@ -530,6 +594,24 @@ export function createAuthEmulator(options: EmulatorOptions = {}) {
       return { id: factor.id };
     },
 
+    // ─── Admin API (service-role; used by the seed script) ────────────────
+    "GET /admin/users": () => ({
+      users: [...users.values()].map(publicUser),
+      aud: "authenticated",
+    }),
+    "POST /admin/users": ({ body }) => {
+      const email = requireEmail(body.email);
+      if (findByEmail(email)) throw new HttpError(422, "email_exists", "User already exists");
+      const user = createUser(
+        email,
+        body.password === undefined ? null : checkPassword(body.password),
+        isRecord(body.user_metadata) ? body.user_metadata : {},
+        "email",
+      );
+      if (body.email_confirm === true) user.email_confirmed_at = iso();
+      return publicUser(user);
+    },
+
     // ─── Test hooks ─────────────────────────────────────────────────────
     "GET /__emails": ({ query }) => {
       const to = query.get("to")?.toLowerCase();
@@ -599,6 +681,7 @@ export function createAuthEmulator(options: EmulatorOptions = {}) {
       const raw = req.method === "GET" || req.method === "DELETE" ? "" : await readBody(req);
       const body: Record<string, unknown> = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
       const result = match.handler({ req, body, query: url.searchParams, params: match.params });
+      if (req.method !== "GET") persist();
       if (result instanceof Redirect) {
         res.writeHead(303, { location: result.location });
         return res.end();
@@ -635,7 +718,10 @@ export function createAuthEmulator(options: EmulatorOptions = {}) {
       return base;
     },
     close(): Promise<void> {
-      return new Promise((resolve, reject) => server.close((e) => (e ? reject(e) : resolve())));
+      return new Promise((resolve, reject) => {
+        server.close((e) => (e ? reject(e) : resolve()));
+        server.closeAllConnections();
+      });
     },
     /** Inspect state in unit tests. */
     get emails(): readonly SentEmail[] {

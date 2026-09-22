@@ -46,6 +46,12 @@ export async function updateSession(
   const userId = typeof sub === "string" ? sub : null;
   if (!userId) return { response, userId: null, mfaRequired: false };
 
+  // Reads the factor list from the session cookie. That is unverified data, so
+  // this result only drives the redirect UX; requireSession() re-checks with the
+  // Auth server and RLS enforces aal2 in the database. Silence supabase-js's
+  // generic "insecure getSession()" warning for this deliberate use.
+  (supabase.auth as unknown as { suppressGetSessionWarning: boolean }).suppressGetSessionWarning =
+    true;
   const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   const mfaRequired = needsMfa({
     // The verified JWT is authoritative for the current level.

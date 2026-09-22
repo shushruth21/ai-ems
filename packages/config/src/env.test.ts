@@ -1,4 +1,4 @@
-import { authSettings, parsePublicEnv, parseServerEnv } from "./env";
+import { authSettings, mailTransport, parsePublicEnv, parseServerEnv } from "./env";
 
 const valid = {
   NEXT_PUBLIC_SUPABASE_URL: "https://ref.supabase.co",
@@ -42,5 +42,10 @@ describe("env", () => {
         parseServerEnv({ ...valid, NODE_ENV: "production", AUTH_RATE_LIMIT_STORE: "memory" }),
       ).rateLimitStore,
     ).toBe("memory");
+  });
+
+  it("never logs emails in production by default", () => {
+    expect(mailTransport(parseServerEnv(valid))).toBe("log");
+    expect(mailTransport(parseServerEnv({ ...valid, NODE_ENV: "production" }))).toBe("none");
   });
 });

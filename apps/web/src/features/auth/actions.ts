@@ -152,7 +152,7 @@ export async function signUp(input: unknown): Promise<ActionResult> {
     return { ok: false, formError: authErrorMessage("signup_disabled").message };
   const parsed = signUpSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
-  const { email, password, fullName } = parsed.data;
+  const { email, password, fullName, next } = parsed.data;
 
   const limit = await limitAuthAttempt("sign-up", email);
   if (!limit.allowed) return rateLimited(limit.retryAfterSeconds);
@@ -163,7 +163,7 @@ export async function signUp(input: unknown): Promise<ActionResult> {
     password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: appUrl(DEFAULT_AFTER_LOGIN),
+      emailRedirectTo: appUrl(safeRedirectPath(next, DEFAULT_AFTER_LOGIN)),
     },
   });
   // Existing-account errors are reported like success to prevent enumeration.
@@ -235,7 +235,7 @@ export async function completePasswordReset(input: unknown): Promise<ActionResul
   // A reset means the old password may be compromised: end every other session.
   await supabase.auth.signOut({ scope: "others" });
   await auditAuthEvent("PASSWORD_CHANGED", { profileId: user.id, metadata: { via: "reset" } });
-  redirectTo(`${DEFAULT_AFTER_LOGIN}?notice=password-updated`);
+  redirectTo("/account?notice=password-updated");
 }
 
 /** Changes the password from account settings; re-verifies the current one first. */

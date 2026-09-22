@@ -24,7 +24,15 @@ export interface RateLimitStore {
 }
 
 export type AuthAction =
-  "sign-in" | "magic-link" | "sign-up" | "password-reset" | "mfa-verify" | "password-change";
+  | "sign-in"
+  | "magic-link"
+  | "sign-up"
+  | "password-reset"
+  | "mfa-verify"
+  | "password-change"
+  | "org-create"
+  | "invite"
+  | "invite-accept";
 
 /**
  * Per-action rules. Keys combine the action with both the client IP and the
@@ -54,6 +62,18 @@ export const AUTH_RATE_LIMITS: Record<
   "mfa-verify": {
     perIp: { limit: 30, windowSeconds: 600 },
     perIdentity: { limit: 8, windowSeconds: 600 },
+  },
+  "org-create": {
+    perIp: { limit: 20, windowSeconds: 3600 },
+    perIdentity: { limit: 5, windowSeconds: 3600 },
+  },
+  invite: {
+    perIp: { limit: 100, windowSeconds: 3600 },
+    perIdentity: { limit: 50, windowSeconds: 3600 },
+  },
+  "invite-accept": {
+    perIp: { limit: 30, windowSeconds: 600 },
+    perIdentity: { limit: 10, windowSeconds: 600 },
   },
   "password-change": {
     perIp: { limit: 20, windowSeconds: 3600 },

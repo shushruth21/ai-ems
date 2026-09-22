@@ -36,9 +36,9 @@ import {
   startTotpEnrollment,
   type TotpEnrollment,
 } from "../actions";
-import { useActionForm, type FormFeedback as Feedback } from "../use-action-form";
+import { useActionForm, type FormFeedback as Feedback } from "@/lib/use-action-form";
 
-import { FormFeedback } from "./form-feedback";
+import { FormFeedback } from "@/components/forms/form-feedback";
 import { OtpInput } from "./otp-input";
 
 export interface MfaFactorView {

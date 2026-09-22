@@ -9,7 +9,8 @@
     "./tenant": "./src/tenant.ts",
     "./tenant-scope": "./src/tenant-scope.ts",
     "./generated/*": "./src/generated/prisma/*.ts",
-    "./auth/*": "./src/auth/*.ts"
+    "./auth/*": "./src/auth/*.ts",
+    "./platform/*": "./src/platform/*.ts"
   },
   "scripts": {
     "db:generate": "prisma generate",
@@ -17,16 +18,21 @@
     "db:format": "prisma format",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "prisma db seed",
+    "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "lint": "eslint --max-warnings=0 .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "clean": "rm -rf src/generated"
+    "clean": "rm -rf src/generated",
+    "db:migrate:wasm": "tsx --no-warnings=ExperimentalWarning scripts/migrate-wasm.ts create",
+    "db:deploy:wasm": "tsx --no-warnings=ExperimentalWarning scripts/migrate-wasm.ts deploy",
+    "db:diff:wasm": "tsx --no-warnings=ExperimentalWarning scripts/migrate-wasm.ts diff",
+    "db:sql": "tsx scripts/apply-sql.ts"
   },
   "dependencies": {
     "@ai-ems/config": "workspace:*",
+    "@ai-ems/domain": "workspace:*",
     "@ai-ems/security": "workspace:*",
     "@prisma/adapter-pg": "catalog:",
     "@prisma/client": "catalog:",
@@ -36,6 +42,8 @@
   "devDependencies": {
     "@ai-ems/eslint-config": "workspace:*",
     "@ai-ems/tsconfig": "workspace:*",
+    "@prisma/driver-adapter-utils": "catalog:",
+    "@prisma/schema-engine-wasm": "catalog:",
     "@supabase/supabase-js": "catalog:",
     "@types/node": "catalog:",
     "@types/pg": "catalog:",

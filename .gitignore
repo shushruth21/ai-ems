@@ -40,3 +40,6 @@ pnpm-debug.log*
 # artifacts are produced by CI, never committed
 artifacts/*
 !artifacts/.gitkeep
+
+# local dev state (auth emulator accounts)
+.ai-ems/

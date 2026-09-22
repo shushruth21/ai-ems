@@ -24,6 +24,8 @@ model Organization {
   locale     String    @default("en-US")
   plan       PlanTier  @default(FREE)
   logoPath   String?   @map("logo_path")
+  /// Members must complete two-factor authentication (aal2) to open this workspace.
+  requireMfa Boolean   @default(false) @map("require_mfa")
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
   archivedAt DateTime? @map("archived_at")
@@ -165,6 +167,8 @@ model Invitation {
   invitedById    String    @map("invited_by_id") @db.Uuid
   expiresAt      DateTime  @map("expires_at")
   acceptedAt     DateTime? @map("accepted_at")
+  acceptedById   String?   @map("accepted_by_id") @db.Uuid
+  revokedAt      DateTime? @map("revoked_at")
   createdAt      DateTime  @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)

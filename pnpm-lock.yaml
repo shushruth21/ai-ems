@@ -9,12 +9,21 @@ catalogs:
     '@hookform/resolvers':
       specifier: ^5.9.1
       version: 5.9.1
+    '@next/env':
+      specifier: 16.3.5
+      version: 16.3.5
     '@prisma/adapter-pg':
       specifier: 7.10.0
       version: 7.10.0
     '@prisma/client':
       specifier: 7.10.0
       version: 7.10.0
+    '@prisma/driver-adapter-utils':
+      specifier: 7.10.0
+      version: 7.10.0
+    '@prisma/schema-engine-wasm':
+      specifier: 7.10.0-4.0edf323efd1d98336f3f0a68684b56f689b900d3
+      version: 7.10.0-4.0edf323efd1d98336f3f0a68684b56f689b900d3
     '@supabase/ssr':
       specifier: ^0.12.7
       version: 0.12.7
@@ -213,6 +222,9 @@ importers:
       '@hookform/resolvers':
         specifier: 'catalog:'
         version: 5.9.1(@standard-schema/spec@1.1.0)(ajv@8.20.0)(effect@3.20.0)(react-hook-form@7.88.0(react@19.2.8))(valibot@1.4.2(typescript@5.9.3))(zod@4.6.5)
+      '@next/env':
+        specifier: 'catalog:'
+        version: 16.3.5
       '@supabase/supabase-js':
         specifier: 'catalog:'
         version: 2.116.0
@@ -326,6 +338,9 @@ importers:
 
   packages/contracts:
     dependencies:
+      '@ai-ems/domain':
+        specifier: workspace:*
+        version: link:../domain
       zod:
         specifier: 'catalog:'
         version: 4.6.5
@@ -354,6 +369,9 @@ importers:
       '@ai-ems/config':
         specifier: workspace:*
         version: link:../config
+      '@ai-ems/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@ai-ems/security':
         specifier: workspace:*
         version: link:../security
@@ -376,6 +394,12 @@ importers:
       '@ai-ems/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
+      '@prisma/driver-adapter-utils':
+        specifier: 'catalog:'
+        version: 7.10.0
+      '@prisma/schema-engine-wasm':
+        specifier: 'catalog:'
+        version: 7.10.0-4.0edf323efd1d98336f3f0a68684b56f689b900d3
       '@supabase/supabase-js':
         specifier: 'catalog:'
         version: 2.116.0
@@ -1478,6 +1502,9 @@ packages:
 
   '@prisma/query-plan-executor@7.2.0':
     resolution: {integrity: sha512-EOZmNzcV8uJ0mae3DhTsiHgoNCuu1J9mULQpGCh62zN3PxPTd+qI9tJvk5jOst8WHKQNwJWR3b39t0XvfBB0WQ==}
+
+  '@prisma/schema-engine-wasm@7.10.0-4.0edf323efd1d98336f3f0a68684b56f689b900d3':
+    resolution: {integrity: sha512-wKt56UDR7JoOs9VQjnwht0NaUJgiMn5WRNwqp52vKbnBcRutt8RbHDzr5wUAlm4aHcskFoEcgSw3+Tc7YHRmFg==}
 
   '@prisma/streams-local@0.1.11':
     resolution: {integrity: sha512-0TcebL559MByKqTJ+SsrFIEg228iw8UCVRFckzgfRSiJqczhs+MuAgWOF9lnOIV/IVqvu+KMnFTH0eDeTQMpUg==}
@@ -5978,6 +6005,8 @@ snapshots:
       '@prisma/debug': 7.2.0
 
   '@prisma/query-plan-executor@7.2.0': {}
+
+  '@prisma/schema-engine-wasm@7.10.0-4.0edf323efd1d98336f3f0a68684b56f689b900d3': {}
 
   '@prisma/streams-local@0.1.11':
     dependencies:

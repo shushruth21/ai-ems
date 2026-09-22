@@ -1,7 +1,11 @@
 /** Route classification and access decisions used by proxy.ts. Pure and unit-tested. */
+import { checkSlug } from "@ai-ems/domain/organization/slug";
 
-/** Where a signed-in user lands when no `next` is given (organization home arrives in Phase 4). */
-export const DEFAULT_AFTER_LOGIN = "/account";
+/** Where a signed-in user lands when no `next` is given: resolves to their workspace. */
+export const DEFAULT_AFTER_LOGIN = "/app";
+export const ONBOARDING_PATH = "/onboarding";
+/** Remembers the last workspace a user opened (not a security boundary). */
+export const LAST_ORG_COOKIE = "ai_ems_org";
 export const LOGIN_PATH = "/login";
 export const MFA_PATH = "/login/mfa";
 
@@ -17,7 +21,7 @@ export const PUBLIC_PATHS = [
   "/api/health",
 ] as const;
 
-const PUBLIC_PREFIXES = ["/api/webhooks/", "/api/v1/", "/legal/"];
+const PUBLIC_PREFIXES = ["/api/webhooks/", "/api/v1/", "/legal/", "/invite/"];
 
 /** Pages only meaningful to signed-out visitors; signed-in users are sent onward. */
 const SIGNED_OUT_ONLY = new Set(["/login", "/signup", "/forgot-password"]);
@@ -102,6 +106,12 @@ export function withNext(path: string, next: string | null | undefined): string 
   const safe = next ? safeRedirectPath(next, "") : "";
   if (!safe || safe === DEFAULT_AFTER_LOGIN) return path;
   return `${path}?next=${encodeURIComponent(safe)}`;
+}
+
+/** The workspace slug when the path is inside `/<org>/…`, else null. */
+export function orgSlugFromPath(pathname: string): string | null {
+  const first = pathname.split("/")[1] ?? "";
+  return first && checkSlug(first) === null ? first : null;
 }
 
 export interface RouteRequest {

@@ -9,16 +9,20 @@ const ERRORS: Record<string, string> = {
 const NOTICES: Record<string, string> = {
   "signed-out": "You've been signed out.",
   "password-updated": "Your password was updated.",
+  "mfa-required":
+    "A workspace you belong to requires two-factor authentication. Set up an authenticator app below to continue.",
+  "left-organization": "You left the workspace.",
 };
 
 export function queryMessage(params: {
   error?: string | string[];
   notice?: string | string[];
-}): { tone: "danger" | "success"; message: string } | null {
+}): { tone: "danger" | "success" | "warning"; message: string } | null {
   const error = typeof params.error === "string" ? ERRORS[params.error] : undefined;
   if (error) return { tone: "danger", message: error };
   const notice = typeof params.notice === "string" ? NOTICES[params.notice] : undefined;
-  return notice ? { tone: "success", message: notice } : null;
+  if (!notice) return null;
+  return { tone: params.notice === "mfa-required" ? "warning" : "success", message: notice };
 }
 
 export function firstParam(value: string | string[] | undefined): string | undefined {

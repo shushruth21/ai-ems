@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { ChangePasswordForm } from "@/features/auth/components/change-password-form";
-import { FormFeedback } from "@/features/auth/components/form-feedback";
+import { FormFeedback } from "@/components/forms/form-feedback";
 import { MfaSettings } from "@/features/auth/components/mfa-settings";
 import { SecurityActivity } from "@/features/auth/components/security-activity";
 import { SessionActions } from "@/features/auth/components/session-actions";

@@ -2,6 +2,7 @@
 
 import type { Route } from "next";
 import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import {
@@ -45,7 +46,7 @@ export function switchOrgPath(basePath: string, fromSlug: string, toSlug: string
 }
 
 export function OrgSwitcher() {
-  const { organization, organizations, basePath, collapsed } = useShell();
+  const { organization, organizations, basePath, collapsed, preview } = useShell();
   const router = useRouter();
 
   return (
@@ -94,9 +95,11 @@ export function OrgSwitcher() {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem disabled>
-          <Plus />
-          Create organization
+        <DropdownMenuItem asChild disabled={preview}>
+          <Link href="/onboarding?new=1">
+            <Plus />
+            Create workspace
+          </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
