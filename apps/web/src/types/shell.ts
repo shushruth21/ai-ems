@@ -18,6 +18,16 @@ export interface ShellOrganization {
   logoUrl?: string | null;
 }
 
+/** A workspace notification as the shell shows it (Phase 5). */
+export interface ShellNotification {
+  id: string;
+  title: string;
+  body: string | null;
+  href: string | null;
+  createdAt: string;
+  read: boolean;
+}
+
 export interface ShellContextValue {
   user: ShellUser;
   organization: ShellOrganization;
@@ -25,6 +35,9 @@ export interface ShellContextValue {
   permissions: readonly Permission[];
   /** Prefix for every in-app link, e.g. "/demo" or "/preview/demo". */
   basePath: string;
+  /** The newest few notifications for the bell menu, unread first in the count. */
+  notifications?: ShellNotification[];
+  unreadNotifications?: number;
   /** Preview mode disables actions that need a session (sign out, etc.). */
   preview?: boolean;
 }

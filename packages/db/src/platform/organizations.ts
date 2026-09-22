@@ -8,6 +8,7 @@ import {
 import type { PlanTier } from "../generated/prisma/client";
 
 import { recordAudit } from "./audit";
+import { enqueueOutbox } from "./outbox";
 import { ensureProfile, type ProfileInput } from "./profiles";
 import { PlatformError, type Db, type DbOrTx, type Tx } from "./types";
 
@@ -278,5 +279,19 @@ export async function setRequireMfa(
       entityId: organizationId,
       ...meta,
     });
+    await enqueueOutbox(tx, [
+      {
+        organizationId,
+        type: "security.changed",
+        payload: {
+          actorId,
+          summary: requireMfa
+            ? "two-factor authentication is now required"
+            : "two-factor authentication is no longer required",
+          entityType: "organization",
+          entityId: organizationId,
+        },
+      },
+    ]);
   });
 }

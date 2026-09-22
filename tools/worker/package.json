@@ -1,0 +1,33 @@
+{
+  "name": "@ai-ems/worker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Background worker: drains the transactional outbox into notifications and email.",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "dev": "tsx watch src/main.ts",
+    "lint": "eslint --max-warnings=0 .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ai-ems/config": "workspace:*",
+    "@ai-ems/db": "workspace:*",
+    "@ai-ems/mail": "workspace:*",
+    "@ai-ems/observability": "workspace:*",
+    "@prisma/adapter-pg": "catalog:"
+  },
+  "devDependencies": {
+    "@ai-ems/eslint-config": "workspace:*",
+    "@ai-ems/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

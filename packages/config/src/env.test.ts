@@ -1,4 +1,4 @@
-import { authSettings, mailTransport, parsePublicEnv, parseServerEnv } from "./env";
+import { authSettings, mailSettings, mailTransport, parsePublicEnv, parseServerEnv } from "./env";
 
 const valid = {
   NEXT_PUBLIC_SUPABASE_URL: "https://ref.supabase.co",
@@ -47,5 +47,23 @@ describe("env", () => {
   it("never logs emails in production by default", () => {
     expect(mailTransport(parseServerEnv(valid))).toBe("log");
     expect(mailTransport(parseServerEnv({ ...valid, NODE_ENV: "production" }))).toBe("none");
+  });
+
+  it("collects mail settings and worker tuning", () => {
+    const e = parseServerEnv({
+      ...valid,
+      MAIL_TRANSPORT: "smtp",
+      SMTP_URL: "smtp://user:pass@mail.example:587",
+      MAIL_FROM: "AI EMS <no-reply@example.test>",
+      WORKER_POLL_MS: "500",
+    });
+    expect(mailSettings(e)).toEqual({
+      transport: "smtp",
+      from: "AI EMS <no-reply@example.test>",
+      smtpUrl: "smtp://user:pass@mail.example:587",
+    });
+    expect(e.WORKER_POLL_MS).toBe(500);
+    expect(e.WORKER_BATCH_SIZE).toBe(20);
+    expect(() => parseServerEnv({ ...valid, SMTP_URL: "http://x" })).toThrow(/SMTP_URL/);
   });
 });

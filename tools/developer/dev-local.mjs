@@ -11,7 +11,9 @@
  *   2. Applies Prisma migrations (WASM engine), the Supabase SQL and the seed.
  *   3. Starts the Supabase Auth emulator (tools/auth-emulator) with accounts
  *      persisted in .ai-ems/auth-emulator.json, and creates the demo owner.
- *   4. Starts `next dev` and restarts any process that crashes, until Ctrl-C.
+ *   4. Starts the outbox worker (tools/worker), which turns events into
+ *      in-app notifications and email.
+ *   5. Starts `next dev` and restarts any process that crashes, until Ctrl-C.
  *
  * Emails (confirmation, reset, magic links) are printed in this terminal.
  * Development only: the emulator is not secure.
@@ -50,6 +52,7 @@ const env = {
   SEED_OWNER_PASSWORD: DEMO_PASSWORD,
   FEATURE_OAUTH_GOOGLE: process.env.FEATURE_OAUTH_GOOGLE ?? "true",
   ENABLE_UI_PREVIEW: process.env.ENABLE_UI_PREVIEW ?? "true",
+  MAIL_TRANSPORT: process.env.MAIL_TRANSPORT ?? "log",
 };
 delete env.DIRECT_URL; // the local database has one URL
 
@@ -219,6 +222,9 @@ await waitFor(() => portOpen(AUTH_PORT), "auth emulator", 30);
 
 prepareDatabase();
 
+// Drains the outbox into notifications and email (printed here as [worker]).
+supervise("worker", "pnpm", ["--silent", "--filter", "@ai-ems/worker", "start"]);
+
 supervise("web", "pnpm", [
   "--silent",
   "--filter",
@@ -235,6 +241,7 @@ console.log(`
 ${c.green}${c.bold}AI EMS is running${c.off}
   App          ${c.bold}${env.NEXT_PUBLIC_APP_URL}${c.off}
   Sign in      ${DEMO_EMAIL}  /  ${DEMO_PASSWORD}
+  Worker       outbox → notifications + email (MAIL_TRANSPORT=${env.MAIL_TRANSPORT ?? "log"})
   Auth (local) ${env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1   ${c.dim}emails are printed below as [auth]${c.off}
   Database     ${env.DATABASE_URL.replace(/:[^:@/]+@/, ":•••@")}
   UI sandbox   ${env.NEXT_PUBLIC_APP_URL}/preview

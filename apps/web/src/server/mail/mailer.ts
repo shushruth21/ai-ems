@@ -1,31 +1,17 @@
 import "server-only";
 
-import { mailTransport } from "@ai-ems/config/env";
+import { mailSettings } from "@ai-ems/config/env";
 import { env } from "@ai-ems/config/env.server";
-import { logger } from "@ai-ems/observability/logger";
+import { createMailer, type MailMessage, type SendResult } from "@ai-ems/mail/mailer";
 
-export interface MailMessage {
-  to: string;
-  subject: string;
-  text: string;
-}
-
-export interface SendResult {
-  /** False when no transport delivered it — the UI should offer another way (e.g. copy link). */
-  delivered: boolean;
-}
+export type { MailMessage, SendResult };
 
 /**
- * Product email. Development prints messages to the server console; a real
- * provider (SMTP/API) plugs in here in a later phase. Never throws.
+ * Product email from the request path (invitations, password links). Shares
+ * `packages/mail` with the outbox worker, so both honour the same transport
+ * settings. Never throws: callers offer a copyable link when `delivered` is
+ * false.
  */
 export async function sendMail(message: MailMessage): Promise<SendResult> {
-  const transport = mailTransport(env());
-  if (transport === "log") {
-    // Development only (see mailTransport): the body may contain a one-time link.
-    console.warn(`\n✉  To: ${message.to}\n   Subject: ${message.subject}\n\n${message.text}\n`);
-    return { delivered: true };
-  }
-  logger.info("mail.not_sent", { reason: "no_transport", subject: message.subject });
-  return { delivered: false };
+  return createMailer(mailSettings(env())).send(message);
 }
