@@ -18,6 +18,7 @@
     "@ai-ems/contracts": "workspace:*",
     "@ai-ems/db": "workspace:*",
     "@ai-ems/domain": "workspace:*",
+    "@ai-ems/mail": "workspace:*",
     "@ai-ems/observability": "workspace:*",
     "@ai-ems/security": "workspace:*",
     "@ai-ems/ui": "workspace:*",

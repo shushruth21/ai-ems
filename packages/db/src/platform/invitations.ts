@@ -9,6 +9,7 @@ import {
 import { canInviteWithRole, POLICY_MESSAGES } from "@ai-ems/domain/organization/membership-policy";
 
 import { recordAudit } from "./audit";
+import { enqueueOutbox } from "./outbox";
 import { ensureProfile, type ProfileInput } from "./profiles";
 import { PlatformError, type Db, type DbOrTx, type Tx } from "./types";
 
@@ -269,6 +270,7 @@ export async function acceptInvitation(
         id: true,
         email: true,
         roleId: true,
+        role: { select: { name: true } },
         organizationId: true,
         expiresAt: true,
         acceptedAt: true,
@@ -323,6 +325,19 @@ export async function acceptInvitation(
       changes: { invitationId: inv.id },
       ...meta,
     });
+    // Same transaction as the membership: the notification can't be sent for a
+    // join that rolled back, and can't be lost if the process dies here.
+    await enqueueOutbox(tx, [
+      {
+        organizationId: inv.organizationId,
+        type: "member.joined",
+        payload: {
+          profileId: profile.id,
+          membershipId: membership.id,
+          roleName: inv.role.name,
+        },
+      },
+    ]);
     return { slug: inv.organization.slug };
   });
 }

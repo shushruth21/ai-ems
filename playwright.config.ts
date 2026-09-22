@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 const port = Number(process.env.PORT ?? 3000);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${port}`;
 const emulatorPort = Number(process.env.AUTH_EMULATOR_PORT ?? 54321);
+const workerHealthPort = Number(process.env.WORKER_HEALTH_PORT ?? port + 900);
 
 /**
  * The app under test talks to the local Supabase Auth emulator
@@ -18,6 +19,7 @@ export const e2eAppEnv: Record<string, string> = {
   DATABASE_URL:
     process.env.E2E_DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/aiems",
   AUTH_RATE_LIMIT_STORE: "postgres",
+  MAIL_TRANSPORT: "none",
   FEATURE_OAUTH_GOOGLE: "true",
   FEATURE_OAUTH_MICROSOFT: "false",
 };
@@ -50,6 +52,18 @@ export default defineConfig({
           url: `http://127.0.0.1:${emulatorPort}/auth/v1/health`,
           reuseExistingServer: !process.env.CI,
           timeout: 30_000,
+        },
+        {
+          // Notifications only appear once the outbox worker has run.
+          command: "pnpm --filter @ai-ems/worker start",
+          env: {
+            ...e2eAppEnv,
+            WORKER_POLL_MS: "500",
+            WORKER_HEALTH_PORT: String(workerHealthPort),
+          },
+          url: `http://127.0.0.1:${workerHealthPort}/healthz`,
+          reuseExistingServer: !process.env.CI,
+          timeout: 60_000,
         },
         {
           command: `pnpm --filter @ai-ems/web build && pnpm --filter @ai-ems/web start -p ${port}`,

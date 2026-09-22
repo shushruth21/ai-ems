@@ -1,0 +1,29 @@
+{
+  "name": "@ai-ems/mail",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "lint": "eslint --max-warnings=0 .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ai-ems/config": "workspace:*",
+    "@ai-ems/observability": "workspace:*",
+    "nodemailer": "catalog:"
+  },
+  "devDependencies": {
+    "@ai-ems/eslint-config": "workspace:*",
+    "@ai-ems/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/nodemailer": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

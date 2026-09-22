@@ -13,6 +13,7 @@ import {
 import type { MembershipStatus } from "../generated/prisma/client";
 
 import { recordAudit } from "./audit";
+import { enqueueOutbox } from "./outbox";
 import { PlatformError, type Db, type DbOrTx, type Tx } from "./types";
 
 export interface MemberRow {
@@ -136,6 +137,13 @@ export async function changeMemberRole(
       ip: actor.ip,
       userAgent: actor.userAgent,
     });
+    await enqueueOutbox(tx, [
+      {
+        organizationId: actor.organizationId,
+        type: "member.role_changed",
+        payload: { profileId: t.profileId, membershipId, roleName: role.name },
+      },
+    ]);
   });
 }
 

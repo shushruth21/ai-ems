@@ -10,5 +10,6 @@
 | [0006](0006-python-services-for-ai-and-ingestion.md)      | Python services for AI, ingestion and forecasting | proposed |
 | [0007](0007-authentication-flows.md)                      | Authentication flows, MFA and rate limiting       | accepted |
 | [0008](0008-workspace-routing-and-membership.md)          | Workspace routing, membership and invitations     | accepted |
+| [0009](0009-outbox-worker-roles-and-api-keys.md)          | Outbox worker, custom roles and API keys          | accepted |
 
 New decisions: copy [0000-template.md](0000-template.md).

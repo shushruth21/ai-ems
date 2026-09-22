@@ -1,0 +1,7 @@
+{
+  "extends": "@ai-ems/tsconfig/library.json",
+  "compilerOptions": {
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["src", "*.ts"]
+}

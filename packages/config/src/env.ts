@@ -32,7 +32,15 @@ const serverSchema = publicSchema.extend({
    * (development default); `none` sends nothing and the UI offers a copyable
    * link instead (production default until an email provider is added).
    */
-  MAIL_TRANSPORT: z.enum(["log", "none"]).optional(),
+  MAIL_TRANSPORT: z.enum(["log", "none", "smtp", "resend"]).optional(),
+  MAIL_FROM: z.string().min(3).default("AI EMS <no-reply@ai-ems.local>"),
+  SMTP_URL: z.string().startsWith("smtp").optional(),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  /** Worker loop interval and batch size (tools/worker). */
+  WORKER_POLL_MS: z.coerce.number<string>().int().min(200).max(60_000).default(2000),
+  WORKER_BATCH_SIZE: z.coerce.number<string>().int().min(1).max(200).default(20),
+  /** When set, the worker serves GET /healthz on this port (probes, e2e). */
+  WORKER_HEALTH_PORT: z.coerce.number<string>().int().min(1).max(65_535).optional(),
   TRUSTED_IP_HEADER: z
     .enum(["x-forwarded-for", "x-real-ip", "cf-connecting-ip"])
     .default("x-forwarded-for"),
@@ -77,8 +85,26 @@ export interface AuthSettings {
   identitySecret: string;
 }
 
-export function mailTransport(e: ServerEnv): "log" | "none" {
+export type MailTransportName = "log" | "none" | "smtp" | "resend";
+
+export function mailTransport(e: ServerEnv): MailTransportName {
   return e.MAIL_TRANSPORT ?? (e.NODE_ENV === "production" ? "none" : "log");
+}
+
+export interface MailSettings {
+  transport: MailTransportName;
+  from: string;
+  smtpUrl?: string;
+  resendApiKey?: string;
+}
+
+export function mailSettings(e: ServerEnv): MailSettings {
+  return {
+    transport: mailTransport(e),
+    from: e.MAIL_FROM,
+    ...(e.SMTP_URL ? { smtpUrl: e.SMTP_URL } : {}),
+    ...(e.RESEND_API_KEY ? { resendApiKey: e.RESEND_API_KEY } : {}),
+  };
 }
 
 /** Derived auth settings with environment-aware defaults. */

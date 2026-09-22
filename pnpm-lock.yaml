@@ -51,6 +51,9 @@ catalogs:
     '@types/node':
       specifier: ^22.20.3
       version: 22.20.3
+    '@types/nodemailer':
+      specifier: ^7.0.4
+      version: 7.0.12
     '@types/pg':
       specifier: ^8.23.1
       version: 8.23.1
@@ -99,6 +102,9 @@ catalogs:
     next-themes:
       specifier: ^0.4.6
       version: 0.4.6
+    nodemailer:
+      specifier: ^10.0.10
+      version: 10.0.10
     pg:
       specifier: ^8.23.0
       version: 8.23.0
@@ -149,8 +155,8 @@ catalogs:
       version: 4.6.5
 
 overrides:
-  mysql2: ^3.24.4
   deepmerge-ts: ^8.0.2
+  mysql2: ^3.24.4
 
 importers:
 
@@ -210,6 +216,9 @@ importers:
       '@ai-ems/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@ai-ems/mail':
+        specifier: workspace:*
+        version: link:../../packages/mail
       '@ai-ems/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -341,6 +350,9 @@ importers:
       '@ai-ems/domain':
         specifier: workspace:*
         version: link:../domain
+      '@ai-ems/security':
+        specifier: workspace:*
+        version: link:../security
       zod:
         specifier: 'catalog:'
         version: 4.6.5
@@ -463,6 +475,40 @@ importers:
       typescript-eslint:
         specifier: 'catalog:'
         version: 8.70.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+
+  packages/mail:
+    dependencies:
+      '@ai-ems/config':
+        specifier: workspace:*
+        version: link:../config
+      '@ai-ems/observability':
+        specifier: workspace:*
+        version: link:../observability
+      nodemailer:
+        specifier: 'catalog:'
+        version: 10.0.10
+    devDependencies:
+      '@ai-ems/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@ai-ems/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.3
+      '@types/nodemailer':
+        specifier: 'catalog:'
+        version: 7.0.12
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.5(jiti@2.7.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.1(@types/node@22.20.3)(jsdom@30.1.0)(vite@8.3.0(@types/node@22.20.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
 
   packages/observability:
     devDependencies:
@@ -623,6 +669,46 @@ importers:
       '@supabase/supabase-js':
         specifier: 'catalog:'
         version: 2.116.0
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.3
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.5(jiti@2.7.0)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.13
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.1(@types/node@22.20.3)(jsdom@30.1.0)(vite@8.3.0(@types/node@22.20.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+
+  tools/worker:
+    dependencies:
+      '@ai-ems/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@ai-ems/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@ai-ems/mail':
+        specifier: workspace:*
+        version: link:../../packages/mail
+      '@ai-ems/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
+      '@prisma/adapter-pg':
+        specifier: 'catalog:'
+        version: 7.10.0
+    devDependencies:
+      '@ai-ems/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@ai-ems/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.3
@@ -2675,6 +2761,9 @@ packages:
   '@types/node@22.20.3':
     resolution: {integrity: sha512-DZmzkmwHzXrLPAXPyKNDzlIwMMUZCVacoD25ywdy5YTKGbOx/2ld+Q38Im2zJ0vBuZP5Prd3VZutKZyXwkOS8A==}
 
+  '@types/nodemailer@7.0.12':
+    resolution: {integrity: sha512-80vKwiIsVSyFA1rRovH59jNPLBOuc6dRZIHEu40gXTkBkZnQv8vog1xSGEb9j5q/tdMAs5ivvDR2pLTU0hGHXA==}
+
   '@types/pg@8.23.1':
     resolution: {integrity: sha512-fKVHpikPdg4GKks3JuLEhvwSyvwzF23hnabPy6DD8ljVbC7+6J5dQzdv4arV6jqq57djnMgs1HKBxX4P8aBI3A==}
 
@@ -4310,6 +4399,10 @@ packages:
   node-releases@2.0.56:
     resolution: {integrity: sha512-x0InOIyzgdk+eyaWaRJFH5snEtiImgBgblZ2CyPrLmqqcuMQkEvcDPHbzqbD8eDsSeJbVOjn+crzyzHaM4D+/A==}
     engines: {node: '>=18'}
+
+  nodemailer@10.0.10:
+    resolution: {integrity: sha512-He9XskOFms62SyAKkLu8CcGcYHAo+BSHSsORI8s4PJH8qZgZY4L4lDfvyN0twvmbpyG+eGrxpyBlskj9d9rJ8A==}
+    engines: {node: '>=20.0.0'}
 
   object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
@@ -7147,6 +7240,10 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
+  '@types/nodemailer@7.0.12':
+    dependencies:
+      '@types/node': 22.20.3
+
   '@types/pg@8.23.1':
     dependencies:
       '@types/node': 22.20.3
@@ -8918,6 +9015,8 @@ snapshots:
       semver: 6.3.1
 
   node-releases@2.0.56: {}
+
+  nodemailer@10.0.10: {}
 
   object-assign@4.1.1: {}
 
