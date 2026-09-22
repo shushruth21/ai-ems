@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AuthCard } from "@/features/auth/components/auth-card";
-import { FormFeedback } from "@/features/auth/components/form-feedback";
+import { FormFeedback } from "@/components/forms/form-feedback";
 import { OAuthButtons } from "@/features/auth/components/oauth-buttons";
 import { SignInForm } from "@/features/auth/components/sign-in-form";
 import { firstParam, queryMessage } from "@/features/auth/messages";

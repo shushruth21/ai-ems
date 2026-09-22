@@ -217,3 +217,44 @@ describe("auth emulator (driven by supabase-js)", () => {
     expect((await second.auth.getUser()).error).not.toBeNull();
   });
 });
+
+describe("persistence and admin API", () => {
+  it("keeps users, sessions and the signing key across restarts", async () => {
+    const { mkdtempSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const stateFile = join(mkdtempSync(join(tmpdir(), "emu-")), "state.json");
+
+    const first = createAuthEmulator({ stateFile });
+    const url1 = await first.listen();
+    const admin = createClient(url1, "secret", { auth: { persistSession: false } });
+    const created = await admin.auth.admin.createUser({
+      email: "keep@example.test",
+      password: "secret123",
+      email_confirm: true,
+      user_metadata: { full_name: "Keep Me" },
+    });
+    expect(created.error).toBeNull();
+    const signIn = await createClient(url1, "k", {
+      auth: { persistSession: false },
+    }).auth.signInWithPassword({
+      email: "keep@example.test",
+      password: "secret123",
+    });
+    const token = signIn.data.session!.access_token;
+    await first.close();
+
+    const second = createAuthEmulator({ stateFile });
+    const url2 = await second.listen();
+    const sb = createClient(url2, "k", { auth: { persistSession: false } });
+    const got = await sb.auth.getUser(token);
+    expect(got.error).toBeNull();
+    expect(got.data.user?.email).toBe("keep@example.test");
+    expect((await sb.auth.getClaims(token)).error).toBeNull();
+    const list = await createClient(url2, "secret", {
+      auth: { persistSession: false },
+    }).auth.admin.listUsers();
+    expect(list.data.users.map((u) => u.email)).toContain("keep@example.test");
+    await second.close();
+  });
+});

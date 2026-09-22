@@ -32,6 +32,7 @@ async function expectNoSeriousA11y(page: Page) {
 }
 
 async function signOutViaAccount(page: Page) {
+  await page.goto("/account");
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/login\?notice=signed-out$/);
 }
@@ -75,7 +76,7 @@ test.describe("auth pages", () => {
     const email = uniqueEmail("openredirect");
     await createUser(email);
     await signIn(page, email, PASSWORD, "https://evil.example/phish");
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(/\/onboarding$/);
   });
 });
 
@@ -95,7 +96,8 @@ test.describe("password sign-in", () => {
     const email = uniqueEmail("signin");
     await createUser(email, { fullName: "Grace Hopper" });
     await signIn(page, email);
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(/\/onboarding$/);
+    await page.goto("/account");
     await expect(page.getByTestId("account-name")).toHaveText("Grace Hopper");
     await expect(page.getByTestId("account-email")).toHaveText(email);
     await expect(page.getByRole("list", { name: "Recent security activity" })).toContainText(
@@ -104,7 +106,7 @@ test.describe("password sign-in", () => {
     await expectNoSeriousA11y(page);
 
     await page.goto("/login");
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(/\/onboarding$/);
 
     await signOutViaAccount(page);
     await expect(page.getByText("You've been signed out.")).toBeVisible();
@@ -144,7 +146,8 @@ test.describe("sign-up and email links", () => {
     const mail = await latestEmail(email, "signup");
     await page.goto(confirmLinkFor(mail));
     await page.getByRole("button", { name: /Confirm email/ }).click();
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(/\/onboarding$/);
+    await page.goto("/account");
     await expect(page.getByTestId("account-name")).toHaveText("Katherine Johnson");
 
     // Links are single-use.
@@ -178,7 +181,7 @@ test.describe("sign-up and email links", () => {
     const mail = await latestEmail(email, "magiclink");
     await page.goto(confirmLinkFor(mail));
     await page.getByRole("button", { name: "Sign in" }).click();
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(/\/onboarding$/);
   });
 
   test("broken links explain what to do", async ({ page }) => {
@@ -209,14 +212,15 @@ test.describe("password reset and change", () => {
     await signIn(page, email, PASSWORD);
     await expect(formAlert(page)).toHaveText("Email or password is incorrect.");
     await signIn(page, email, "Silver-Maple-Harbor-77");
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(/\/onboarding$/);
   });
 
   test("change password requires the current one", async ({ page }) => {
     const email = uniqueEmail("change");
     await createUser(email);
     await signIn(page, email);
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(/\/onboarding$/);
+    await page.goto("/account");
     const form = page.getByRole("form", { name: "Change password" });
     await form.getByLabel("Current password").fill("not-my-password");
     await form.getByLabel("New password", { exact: true }).fill("Copper-Field-Orbit-19");
@@ -235,7 +239,8 @@ test.describe("two-factor authentication", () => {
     const email = uniqueEmail("mfa");
     await createUser(email);
     await signIn(page, email);
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(/\/onboarding$/);
+    await page.goto("/account");
 
     await page.getByRole("button", { name: "Set up authenticator app" }).click();
     const enrollment = page.getByTestId("totp-enrollment");
@@ -289,7 +294,8 @@ test.describe("two-factor authentication", () => {
     const { totpSecret } = await createUser(email, { totp: true });
     await signIn(page, email);
     await passMfa(page, totpSecret!);
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(/\/onboarding$/);
+    await page.goto("/account");
     await expect(page.getByRole("button", { name: "Remove" })).toBeEnabled();
   });
 });
@@ -299,23 +305,24 @@ test.describe("sessions and OAuth", () => {
     const email = uniqueEmail("global");
     await createUser(email);
     await signIn(page, email);
-    await expect(page).toHaveURL(/\/account$/);
+    await expect(page).toHaveURL(/\/onboarding$/);
+    await page.goto("/account");
 
     const other = await browser.newContext();
     const otherPage = await other.newPage();
     await isolateClientIp(otherPage);
     await signIn(otherPage, email);
-    await expect(otherPage).toHaveURL(/\/account$/);
+    await expect(otherPage).toHaveURL(/\/onboarding$/);
 
     await page.getByRole("button", { name: "Sign out of all devices" }).click();
     await expect(page).toHaveURL(/\/login\?notice=signed-out$/);
 
     await otherPage.goto("/account");
-    await expect(otherPage).toHaveURL(/\/login\?error=session_expired$/);
+    await expect(otherPage).toHaveURL(/\/login\?next=%2Faccount&error=session_expired$/);
     await expect(otherPage.getByText("Your session ended.")).toBeVisible();
     // Cookies were cleared, so the sign-in page is usable again.
     await signIn(otherPage, email);
-    await expect(otherPage).toHaveURL(/\/account$/);
+    await expect(otherPage).toHaveURL(/\/onboarding$/);
     await other.close();
   });
 

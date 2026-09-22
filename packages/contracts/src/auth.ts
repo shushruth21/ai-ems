@@ -48,6 +48,7 @@ export const signUpSchema = z
     email: emailSchema,
     password: z.string().max(PASSWORD_MAX_LENGTH, "Password is too long"),
     acceptTerms: z.boolean().refine((v) => v, "You must accept the terms to continue"),
+    next: nextPathSchema,
   })
   .superRefine((data, ctx) => {
     const context = [data.email.split("@")[0] ?? "", ...data.fullName.split(/\s+/)];

@@ -19,18 +19,18 @@ import {
 import { Input } from "@ai-ems/ui/components/ui/input";
 
 import { signUp } from "../actions";
-import { useActionForm } from "../use-action-form";
+import { useActionForm } from "@/lib/use-action-form";
 
-import { FormFeedback } from "./form-feedback";
+import { FormFeedback } from "@/components/forms/form-feedback";
 import { PasswordInput } from "./password-input";
 import { PasswordStrength } from "./password-strength";
 
 type Input = z.input<typeof signUpSchema>;
 
-export function SignUpForm() {
+export function SignUpForm({ next }: { next?: string }) {
   const form = useForm<Input, unknown, z.output<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: { fullName: "", email: "", password: "", acceptTerms: false },
+    defaultValues: { fullName: "", email: "", password: "", acceptTerms: false, next },
     mode: "onTouched",
   });
   const { onSubmit, pending, feedback } = useActionForm(form, signUp);

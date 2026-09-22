@@ -1,5 +1,5 @@
 /** Which phase delivers a given module path (used by the preview placeholders). */
-const ROADMAP: { prefix: string; title: string; phase: number; summary: string }[] = [
+export const ROADMAP: { prefix: string; title: string; phase: number; summary: string }[] = [
   {
     prefix: "settings",
     title: "Settings",

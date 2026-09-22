@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { decideRoute, isPreviewEnabled } from "@/lib/routes";
+import { decideRoute, isPreviewEnabled, LAST_ORG_COOKIE, orgSlugFromPath } from "@/lib/routes";
 import { updateSession } from "@ai-ems/security/authentication/supabase/proxy";
 import { buildCsp, createNonce } from "@ai-ems/security/http/csp";
 
@@ -33,6 +33,20 @@ export async function proxy(request: NextRequest) {
     result = NextResponse.redirect(new URL(decision.to, request.url));
     // Keep any refreshed session cookies.
     response.cookies.getAll().forEach((c) => result.cookies.set(c));
+  }
+
+  // Remember the workspace so /app can reopen it next time. Membership is
+  // checked where it matters (the /[org] layout and /app), not here.
+  const slug =
+    decision.action === "continue" && userId && !mfaRequired ? orgSlugFromPath(pathname) : null;
+  if (slug && request.cookies.get(LAST_ORG_COOKIE)?.value !== slug) {
+    result.cookies.set(LAST_ORG_COOKIE, slug, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: request.nextUrl.protocol === "https:",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
   }
 
   result.headers.set("Content-Security-Policy", csp);

@@ -1,4 +1,15 @@
+import { fileURLToPath } from "node:url";
+
+import { loadEnvConfig } from "@next/env";
 import type { NextConfig } from "next";
+
+// The monorepo keeps one `.env` at the repo root; Next.js only reads env files
+// next to the app, so load the root ones first (process variables still win).
+const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+loadEnvConfig(repoRoot, process.env.NODE_ENV !== "production", {
+  info: () => {},
+  error: console.error,
+});
 
 /**
  * Baseline security headers. The Content-Security-Policy (with a per-request
@@ -26,7 +37,7 @@ const supabaseHost = (() => {
 const nextConfig: NextConfig = {
   output: "standalone",
   // Monorepo: trace files from the workspace root for the standalone build.
-  outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
+  outputFileTracingRoot: repoRoot,
   // Internal packages ship TypeScript source.
   transpilePackages: [
     "@ai-ems/config",
@@ -38,6 +49,9 @@ const nextConfig: NextConfig = {
     "@ai-ems/ui",
   ],
   poweredByHeader: false,
+  // Dev-only logging of server function calls prints their arguments —
+  // including passwords and one-time codes from the auth actions. Keep off.
+  logging: { serverFunctions: false },
   reactStrictMode: true,
   typedRoutes: true,
   images: {

@@ -14,8 +14,10 @@
 
 ## Evidence log
 
-| Date       | Control          | Evidence                                                                             | By  |
-| ---------- | ---------------- | ------------------------------------------------------------------------------------ | --- |
-| 2026-09-17 | Tenant isolation | RLS integration suite: 9 tests passing on PostgreSQL                                 | —   |
-| 2026-09-17 | Tenant isolation | RLS integration suite: 15 tests (incl. MFA restrictive policy, auth tables)          | —   |
-| 2026-09-17 | Authentication   | E2E: sign-up, links, reset, MFA, OAuth PKCE, rate limits, global sign-out (emulator) | —   |
+| Date       | Control           | Evidence                                                                             | By  |
+| ---------- | ----------------- | ------------------------------------------------------------------------------------ | --- |
+| 2026-09-17 | Tenant isolation  | RLS integration suite: 9 tests passing on PostgreSQL                                 | —   |
+| 2026-09-17 | Tenant isolation  | RLS integration suite: 15 tests (incl. MFA restrictive policy, auth tables)          | —   |
+| 2026-09-17 | Authentication    | E2E: sign-up, links, reset, MFA, OAuth PKCE, rate limits, global sign-out (emulator) | —   |
+| 2026-09-22 | Access control    | Platform integration suite: 21 tests (roles, invitations, last-owner concurrency)    | —   |
+| 2026-09-22 | Change management | Prisma migrations committed and applied in CI; drift check on every pull request     | —   |

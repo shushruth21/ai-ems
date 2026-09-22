@@ -83,6 +83,21 @@ export async function signIn(page: Page, email: string, password = PASSWORD, nex
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
 }
 
+/** Signs in and creates a fresh workspace; returns its slug. */
+export async function createWorkspace(page: Page, name: string): Promise<string> {
+  await expect(page).toHaveURL(/\/onboarding(\?|$)/);
+  await page.getByRole("textbox", { name: "Company or team name" }).fill(name);
+  const slug = (await page.getByRole("textbox", { name: "Workspace address" }).inputValue()).trim();
+  await expect(page.getByText("Available")).toBeVisible();
+  await page.getByRole("button", { name: "Create workspace" }).click();
+  await expect(page).toHaveURL(new RegExp(`/${slug}/dashboard`));
+  return slug;
+}
+
+export function uniqueWorkspaceName(tag: string): string {
+  return `${tag} ${randomUUID().slice(0, 6)}`;
+}
+
 export async function passMfa(page: Page, secret: string) {
   await expect(page).toHaveURL(/\/login\/mfa/);
   await page.getByRole("textbox", { name: "Authentication code" }).fill(currentCode(secret));

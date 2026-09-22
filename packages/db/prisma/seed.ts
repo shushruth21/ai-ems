@@ -7,7 +7,7 @@
  * Optional: set SEED_OWNER_EMAIL + SEED_OWNER_PASSWORD (and Supabase keys) to
  * also create a login for the demo owner. No credentials are hard-coded.
  */
-import "dotenv/config";
+import "../load-env";
 
 import { PrismaPg } from "@prisma/adapter-pg";
 import { createClient } from "@supabase/supabase-js";
@@ -17,9 +17,10 @@ import {
   ALL_PERMISSIONS,
   moduleOf,
   PERMISSIONS,
-  resolveRolePermissions,
   SYSTEM_ROLES,
 } from "@ai-ems/security/authorization/permissions";
+
+import { provisionRolesAndSequences } from "../src/platform/organizations";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DIRECT_URL ?? process.env.DATABASE_URL! }),
@@ -52,46 +53,7 @@ async function seedOrganization() {
     },
   });
 
-  for (const [key, def] of Object.entries(SYSTEM_ROLES)) {
-    const role = await prisma.role.upsert({
-      where: { organizationId_key: { organizationId: org.id, key } },
-      update: { name: def.name },
-      create: { organizationId: org.id, key, name: def.name, isSystem: true },
-    });
-    await prisma.rolePermission.deleteMany({ where: { roleId: role.id } });
-    await prisma.rolePermission.createMany({
-      data: resolveRolePermissions(key).map((permissionKey) => ({
-        roleId: role.id,
-        permissionKey,
-      })),
-    });
-  }
-
-  const sequences = [
-    ["lead", "LD"],
-    ["quote", "QT"],
-    ["sales_order", "SO"],
-    ["purchase_order", "PO"],
-    ["goods_receipt", "GR"],
-    ["work_order", "WO"],
-    ["inspection", "QI"],
-    ["ncr", "NCR"],
-    ["shipment", "SH"],
-    ["invoice", "INV"],
-  ] as const;
-  for (const [key, prefix] of sequences) {
-    await prisma.sequence.upsert({
-      where: { organizationId_key: { organizationId: org.id, key } },
-      update: {},
-      create: {
-        organizationId: org.id,
-        key,
-        prefix,
-        nextValue: 1,
-        year: new Date().getUTCFullYear(),
-      },
-    });
-  }
+  await provisionRolesAndSequences(prisma, org.id, new Date().getUTCFullYear());
 
   console.log(`✓ organization "${org.name}" with ${Object.keys(SYSTEM_ROLES).length} roles`);
   return org;

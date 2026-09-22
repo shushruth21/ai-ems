@@ -29,7 +29,11 @@
     "clean": "turbo run clean && rm -rf node_modules .turbo",
     "prepare": "husky",
     "doctor": "node tools/developer/doctor.mjs",
-    "postinstall": "pnpm --filter @ai-ems/db db:generate || echo 'Prisma client not generated \u2014 run pnpm db:generate'"
+    "postinstall": "pnpm --filter @ai-ems/db db:generate || echo 'Prisma client not generated \u2014 run pnpm db:generate'",
+    "dev:local": "node tools/developer/dev-local.mjs",
+    "db:sql": "pnpm --filter @ai-ems/db db:sql",
+    "db:deploy:wasm": "pnpm --filter @ai-ems/db db:deploy:wasm",
+    "db:migrate:wasm": "pnpm --filter @ai-ems/db db:migrate:wasm"
   },
   "devDependencies": {
     "@ai-ems/eslint-config": "workspace:*",

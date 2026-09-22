@@ -50,10 +50,10 @@ export function UserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
-            <Link href={joinPath(basePath, "/settings/profile") as Route}>
+          <DropdownMenuItem asChild disabled={preview}>
+            <Link href="/account">
               <UserRound />
-              Profile
+              Account & security
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>

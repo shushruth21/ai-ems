@@ -15,8 +15,12 @@
 | T3  | Ledger or audit tampering                       | DB                       | Append-only triggers                                                                        | Done                            |
 | R1  | Actions not attributable                        | All writes               | `audit_events` with actor, IP, user agent, before/after                                     | Phase 5                         |
 | R2  | Security events not attributable                | Auth                     | Append-only `auth_events` (IP, user agent, HMAC identity), visible to the user              | Done                            |
+| S7  | Invitation link intercepted or shared           | invitations              | Hashed single-use token, 7-day expiry, bound to the invited email, sign-in required         | Done                            |
+| E5  | Privilege escalation by editing your own role   | members                  | Pure membership policy: no self-edits, owner-only owner grants, last-owner protection       | Done                            |
+| E6  | Workspace left without an owner                 | members                  | Advisory-locked transaction re-checks the active owner count                                | Done                            |
 | I1  | Cross-tenant data read                          | reads, Realtime, Storage | Tenant client, RLS on every tenant table, org-prefixed storage policy                       | Done                            |
 | I2  | XSS leading to token or data exfiltration       | web                      | React escaping, nonce CSP (`strict-dynamic`), no `dangerouslySetInnerHTML`                  | Done                            |
+| I7  | Workspace existence disclosure                  | /[org] routes            | Non-members and suspended members get 404, never 403                                        | Done                            |
 | I6  | Account enumeration                             | Auth                     | Uniform errors and responses for sign-in, sign-up, magic link, reset                        | Done                            |
 | I3  | Secrets in the client bundle                    | build                    | Server-only env module, `server-only` imports, gitleaks in CI                               | Done                            |
 | I4  | PII sent to the LLM                             | AI                       | Minimisation, redaction, per-tenant opt-out                                                 | Phase 21                        |

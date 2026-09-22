@@ -64,11 +64,20 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: RLS policies (isolated database)
         run: pnpm test:integration
-      - name: Full schema + Supabase SQL + seed
+      - name: Migrations are in sync with the schema
+        run: |
+          pending="$(pnpm --silent --filter @ai-ems/db db:diff:wasm)"
+          if [ -n "$pending" ]; then
+            echo "::error::prisma/schema has changes without a migration. Run: pnpm db:migrate --name <change>"
+            echo "$pending"
+            exit 1
+          fi
+      - name: Migrations + Supabase SQL + seed (twice, to prove idempotency)
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/supabase-stubs.sql
-          pnpm --filter @ai-ems/db exec prisma db push
+          pnpm db:deploy
           infrastructure/scripts/apply-supabase-sql.sh
+          pnpm db:seed
           pnpm db:seed
 
   e2e:
@@ -94,11 +103,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - name: Database for audit + rate-limit tables
+      - name: Database (migrations + Supabase SQL + seed)
         run: |
-          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/supabase-stubs.sql
-          pnpm --filter @ai-ems/db exec prisma db push
-          infrastructure/scripts/apply-supabase-sql.sh
+          pnpm db:deploy
+          pnpm --filter @ai-ems/db db:sql
+          pnpm db:seed
       # Playwright starts the Supabase Auth emulator (tools/auth-emulator) and
       # builds the app against it; see playwright.config.ts.
       - run: pnpm test:e2e

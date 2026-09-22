@@ -17,9 +17,9 @@ import {
 } from "@ai-ems/ui/components/ui/form";
 
 import { verifyMfa } from "../actions";
-import { useActionForm } from "../use-action-form";
+import { useActionForm } from "@/lib/use-action-form";
 
-import { FormFeedback } from "./form-feedback";
+import { FormFeedback } from "@/components/forms/form-feedback";
 import { OtpInput } from "./otp-input";
 
 export function MfaChallengeForm({ factorId, next }: { factorId: string; next?: string }) {

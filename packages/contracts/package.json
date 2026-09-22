@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@ai-ems/domain": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

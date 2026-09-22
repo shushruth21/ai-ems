@@ -3,7 +3,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 .PHONY: help install doctor dev build check typecheck lint test test-integration e2e format \
-        db-generate db-migrate db-deploy db-seed db-sql docker-build docker-up clean
+        dev-local db-generate db-migrate db-migrate-wasm db-deploy db-seed db-sql docker-build docker-up clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -43,15 +43,21 @@ e2e: ## Playwright end-to-end + accessibility tests
 format: ## Format everything with Prettier
 	pnpm format
 
+dev-local: ## Run everything locally (database + auth emulator + app), no Supabase account needed
+	pnpm dev:local
+
 db-generate: ## Generate the Prisma client
 	pnpm db:generate
 
-db-migrate: ## Create/apply a development migration (NAME=…)
+db-migrate: ## Create a migration from schema changes (NAME=…)
 	pnpm db:migrate --name $(or $(NAME),change)
+
+db-migrate-wasm: ## Same, without Prisma engine downloads (blocked networks)
+	pnpm db:migrate:wasm --name $(or $(NAME),change)
 
 db-deploy: ## Apply migrations + Supabase SQL (DATABASE_URL = direct connection)
 	pnpm db:deploy
-	infrastructure/scripts/apply-supabase-sql.sh
+	pnpm db:sql
 
 db-seed: ## Seed permissions and the demo tenant
 	pnpm db:seed

@@ -19,9 +19,9 @@ import { Input } from "@ai-ems/ui/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ai-ems/ui/components/ui/tabs";
 
 import { requestMagicLink, signInWithPassword } from "../actions";
-import { useActionForm } from "../use-action-form";
+import { useActionForm } from "@/lib/use-action-form";
 
-import { FormFeedback } from "./form-feedback";
+import { FormFeedback } from "@/components/forms/form-feedback";
 import { PasswordInput } from "./password-input";
 
 export function SignInForm({

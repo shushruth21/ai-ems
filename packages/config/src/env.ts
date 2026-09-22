@@ -27,6 +27,12 @@ const serverSchema = publicSchema.extend({
   /** HMAC key for hashing emails in audit/rate-limit rows. Falls back to SUPABASE_SECRET_KEY. */
   AUTH_IDENTITY_SECRET: z.string().min(16).optional(),
   /** Header set by the edge/proxy that carries the real client IP. */
+  /**
+   * Outgoing product email (invitations). `log` prints to the server console
+   * (development default); `none` sends nothing and the UI offers a copyable
+   * link instead (production default until an email provider is added).
+   */
+  MAIL_TRANSPORT: z.enum(["log", "none"]).optional(),
   TRUSTED_IP_HEADER: z
     .enum(["x-forwarded-for", "x-real-ip", "cf-connecting-ip"])
     .default("x-forwarded-for"),
@@ -69,6 +75,10 @@ export interface AuthSettings {
   rateLimitEnabled: boolean;
   rateLimitStore: "postgres" | "memory";
   identitySecret: string;
+}
+
+export function mailTransport(e: ServerEnv): "log" | "none" {
+  return e.MAIL_TRANSPORT ?? (e.NODE_ENV === "production" ? "none" : "log");
 }
 
 /** Derived auth settings with environment-aware defaults. */

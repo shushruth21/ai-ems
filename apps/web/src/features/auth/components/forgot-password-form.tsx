@@ -17,9 +17,9 @@ import {
 import { Input } from "@ai-ems/ui/components/ui/input";
 
 import { requestPasswordReset } from "../actions";
-import { useActionForm } from "../use-action-form";
+import { useActionForm } from "@/lib/use-action-form";
 
-import { FormFeedback } from "./form-feedback";
+import { FormFeedback } from "@/components/forms/form-feedback";
 
 export function ForgotPasswordForm() {
   const form = useForm<
