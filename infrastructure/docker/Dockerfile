@@ -30,8 +30,10 @@ ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-RUN DATABASE_URL=postgresql://build@localhost/build pnpm --filter @ai-ems/db db:generate \
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY \
+    DATABASE_URL=postgresql://build@localhost/build \
+    SUPABASE_SECRET_KEY=build-time-placeholder
+RUN pnpm --filter @ai-ems/db db:generate \
   && pnpm turbo run build --filter=@ai-ems/web
 
 # ── runtime ──────────────────────────────────────────────────────────────

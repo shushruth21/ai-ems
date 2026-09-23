@@ -18,7 +18,7 @@
       "dependsOn": ["^build", "^db:generate", "db:generate"],
       "inputs": ["$TURBO_DEFAULT$", "!**/*.test.*", "!tests/**"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": ["NEXT_PUBLIC_*", "ENABLE_UI_PREVIEW"]
+      "env": ["NEXT_PUBLIC_*", "ENABLE_UI_PREVIEW", "DATABASE_URL", "SUPABASE_SECRET_KEY"]
     },
     "typecheck": {
       "dependsOn": ["^db:generate", "db:generate"],
