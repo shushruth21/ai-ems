@@ -102,6 +102,9 @@ export const optionGroupSchema = z.object({
   minValue: optionalNumber.optional(),
   maxValue: optionalNumber.optional(),
   sortOrder: z.coerce.number<string>().int().min(0).max(9999).default(0),
+  /** Empty means "always ask"; otherwise ask only when `visibleWhenGroup` is this option. */
+  visibleWhenGroup: z.string().trim().max(24).optional().or(z.literal("")),
+  visibleWhenOption: z.string().trim().max(24).optional().or(z.literal("")),
 });
 
 export const groupIdSchema = z.object({ groupId: z.string().min(1) });
@@ -128,3 +131,33 @@ export type CategoryInput = z.input<typeof categorySchema>;
 export type ProductInput = z.input<typeof productSchema>;
 export type OptionGroupInput = z.input<typeof optionGroupSchema>;
 export type OptionInput = z.input<typeof optionSchema>;
+
+// ─── Configurator ─────────────────────────────────────────────────────────
+
+/** One answer per option group: a code, several codes, a number, text or a flag. */
+export const answerSchema = z.union([
+  z.string().max(200),
+  z.array(z.string().max(64)).max(50),
+  z.number(),
+  z.boolean(),
+  z.null(),
+]);
+
+export const configurationSchema = z.object({
+  productId: z.string().min(1),
+  leadId: z.string().max(40).optional().or(z.literal("")),
+  name: z.string().trim().min(2, "Name it so you can recognise it later").max(80),
+  quantity: z.coerce.number<string>().int().min(1).max(9999).default(1),
+  /** Sent as JSON because the shape depends on the product's own groups. */
+  answers: z.string().max(20_000),
+});
+
+export const configurationIdSchema = z.object({ configurationId: z.string().min(1) });
+
+/** "Only ask this group when <group> is <option>" — the rule the editor writes. */
+export const visibilityRuleSchema = z.object({
+  group: z.string().trim().max(24),
+  equals: z.string().trim().max(24),
+});
+
+export type ConfigurationFormInput = z.input<typeof configurationSchema>;

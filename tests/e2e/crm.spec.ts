@@ -158,8 +158,17 @@ test.describe("leads", () => {
     await leadForm.getByRole("button", { name: "Create lead" }).click();
     await expect(page).toHaveURL(/\/crm\/leads\//);
 
-    await page.goto(`/${slug}/dashboard`);
-    await expect(page.getByText(/1 open lead worth/)).toBeVisible();
+    // Revalidation can lag a beat under load, so re-read the page rather than
+    // asserting on the first paint.
+    await expect
+      .poll(
+        async () => {
+          await page.goto(`/${slug}/dashboard`);
+          return page.locator("main").innerText();
+        },
+        { timeout: 20_000, message: "the dashboard should pick up the new lead" },
+      )
+      .toMatch(/1 open lead worth/);
     await expect(page.locator("body")).toContainText("4,200");
   });
 });

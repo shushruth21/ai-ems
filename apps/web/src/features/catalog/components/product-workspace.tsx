@@ -18,6 +18,7 @@ import { ProductForm, type CategoryOption, type ProductFormValues } from "./prod
 
 export interface OptionView {
   id: string;
+  code: string;
   label: string;
   priceDelta: number;
   pricePctDelta: number;
@@ -26,6 +27,7 @@ export interface OptionView {
 export interface GroupView {
   id: string;
   code: string;
+  visibleWhen: { group: string; equals: string } | null;
   label: string;
   input: string;
   required: boolean;
@@ -143,6 +145,13 @@ export function ProductWorkspace({
             <GroupForm
               slug={slug}
               productId={product.id}
+              triggers={product.groups
+                .filter((g) => HAS_CHOICES.has(g.input))
+                .map((g) => ({
+                  code: g.code,
+                  label: g.label,
+                  options: g.options.map((o) => ({ code: o.code, label: o.label })),
+                }))}
               group={groupForm === "new" ? undefined : groupForm}
               onDone={(message) => {
                 setGroupForm(null);
@@ -170,6 +179,18 @@ export function ProductWorkspace({
                         {group.required ? <Badge tone="warning">required</Badge> : null}
                       </h3>
                       <p className="font-mono text-xs text-muted-foreground">{group.code}</p>
+                      {group.visibleWhen ? (
+                        <p className="text-xs text-muted-foreground">
+                          Asked only when{" "}
+                          {product.groups.find((g) => g.code === group.visibleWhen?.group)?.label ??
+                            group.visibleWhen.group}{" "}
+                          is{" "}
+                          {product.groups
+                            .find((g) => g.code === group.visibleWhen?.group)
+                            ?.options.find((o) => o.code === group.visibleWhen?.equals)?.label ??
+                            group.visibleWhen.equals}
+                        </p>
+                      ) : null}
                     </div>
                     {canWrite ? (
                       <div className="flex gap-1">

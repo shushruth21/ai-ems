@@ -9,6 +9,8 @@ import { toFieldErrors, type ActionResult } from "@ai-ems/contracts/auth";
 import {
   categoryIdSchema,
   categorySchema,
+  configurationIdSchema,
+  configurationSchema,
   groupIdSchema,
   optionGroupSchema,
   optionIdSchema,
@@ -20,6 +22,7 @@ import {
   toOptionalNumber,
 } from "@ai-ems/contracts/catalog";
 import { archiveCategory, createCategory, updateCategory } from "@ai-ems/db/catalog/categories";
+import { deleteConfiguration, saveConfiguration } from "@ai-ems/db/catalog/configurator";
 import {
   deleteOption,
   deleteOptionGroup,
@@ -157,7 +160,7 @@ export async function saveGroup(slug: string, input: unknown): Promise<ActionRes
     const ctx = await requireOrgContext(slug, "catalog.product.write");
     const parsed = optionGroupSchema.safeParse(input);
     if (!parsed.success) return invalid(parsed.error);
-    const { groupId, ...rest } = parsed.data;
+    const { groupId, visibleWhenGroup, visibleWhenOption, ...rest } = parsed.data;
     await saveOptionGroup(
       ctx.db,
       await actorFrom(ctx),
@@ -165,6 +168,10 @@ export async function saveGroup(slug: string, input: unknown): Promise<ActionRes
         ...rest,
         minValue: toOptionalNumber(rest.minValue),
         maxValue: toOptionalNumber(rest.maxValue),
+        visibleWhen:
+          visibleWhenGroup && visibleWhenOption
+            ? { group: visibleWhenGroup, equals: visibleWhenOption }
+            : null,
       },
       groupId || undefined,
     );
@@ -264,6 +271,56 @@ export async function removeCategory(slug: string, input: unknown): Promise<Acti
     await archiveCategory(ctx.db, await actorFrom(ctx), parsed.data.categoryId);
     revalidateWorkspace(slug);
     return { ok: true, message: "Category removed." };
+  } catch (error) {
+    return failFrom(error);
+  }
+}
+
+// ─── Saved configurations ─────────────────────────────────────────────────
+
+/**
+ * Saves a configured product. The answers arrive as JSON because their shape
+ * depends on the product; the repository validates and prices them against
+ * the product's own option groups before anything is stored.
+ */
+export async function saveConfiguredProduct(slug: string, input: unknown): Promise<ActionResult> {
+  try {
+    const ctx = await requireOrgContext(slug, "sales.quote.write");
+    const parsed = configurationSchema.safeParse(input);
+    if (!parsed.success) return invalid(parsed.error);
+
+    let answers: unknown;
+    try {
+      answers = JSON.parse(parsed.data.answers);
+    } catch {
+      return { ok: false, formError: "Those answers didn't come through — try again." };
+    }
+    if (typeof answers !== "object" || answers === null || Array.isArray(answers)) {
+      return { ok: false, formError: "Those answers didn't come through — try again." };
+    }
+
+    const saved = await saveConfiguration(ctx.db, await actorFrom(ctx), {
+      productId: parsed.data.productId,
+      leadId: parsed.data.leadId || null,
+      name: parsed.data.name,
+      quantity: parsed.data.quantity,
+      answers: answers as Record<string, never>,
+    });
+    revalidateWorkspace(slug);
+    return { ok: true, message: `Saved "${parsed.data.name}" at ${saved.total}.` };
+  } catch (error) {
+    return failFrom(error);
+  }
+}
+
+export async function removeConfiguration(slug: string, input: unknown): Promise<ActionResult> {
+  try {
+    const ctx = await requireOrgContext(slug, "sales.quote.write");
+    const parsed = configurationIdSchema.safeParse(input);
+    if (!parsed.success) return invalid(parsed.error);
+    await deleteConfiguration(ctx.db, await actorFrom(ctx), parsed.data.configurationId);
+    revalidateWorkspace(slug);
+    return { ok: true, message: "Configuration removed." };
   } catch (error) {
     return failFrom(error);
   }

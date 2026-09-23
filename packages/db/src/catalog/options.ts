@@ -12,7 +12,7 @@ import {
   type CrmDb as CatalogDb,
 } from "../crm/types";
 
-import type { OptionInput } from "../generated/prisma/client";
+import { Prisma, type OptionInput } from "../generated/prisma/client";
 
 export interface OptionGroupInput {
   productId: string;
@@ -23,6 +23,8 @@ export interface OptionGroupInput {
   minValue?: number | null;
   maxValue?: number | null;
   sortOrder: number;
+  /** Ask this group only when another group's answer matches. */
+  visibleWhen?: { group: string; equals: string } | null;
 }
 
 export interface ProductOptionInput {
@@ -95,6 +97,7 @@ export async function saveOptionGroup(
     select: { id: true },
   });
   if (!product) throw new PlatformError("not_found", "Product not found.");
+  await assertTrigger(db, input, groupId);
 
   const data = {
     label: input.label,
@@ -103,6 +106,7 @@ export async function saveOptionGroup(
     minValue: input.minValue ?? null,
     maxValue: input.maxValue ?? null,
     sortOrder: input.sortOrder,
+    visibleWhen: input.visibleWhen ?? Prisma.DbNull,
   };
 
   if (groupId) {
@@ -126,6 +130,29 @@ export async function saveOptionGroup(
   });
   await audit(db, actor, "option_group.created", group.id, { label: input.label });
   return group;
+}
+
+/**
+ * A visibility rule points at another group's option. It must exist, and a
+ * group can't hide behind itself — that question could never be answered.
+ */
+async function assertTrigger(
+  db: CatalogDb,
+  input: OptionGroupInput,
+  groupId?: string,
+): Promise<void> {
+  if (!input.visibleWhen) return;
+  const trigger = await db.optionGroup.findFirst({
+    where: { productId: input.productId, code: input.visibleWhen.group },
+    select: { id: true, options: { select: { code: true } } },
+  });
+  if (!trigger) throw new PlatformError("not_found", "That question isn't on this product.");
+  if (groupId && trigger.id === groupId) {
+    throw new PlatformError("invalid_state", "A question can't depend on its own answer.");
+  }
+  if (!trigger.options.some((o) => o.code === input.visibleWhen!.equals)) {
+    throw new PlatformError("not_found", "That answer isn't one of the options.");
+  }
 }
 
 export async function deleteOptionGroup(
