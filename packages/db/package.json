@@ -10,7 +10,9 @@
     "./tenant-scope": "./src/tenant-scope.ts",
     "./generated/*": "./src/generated/prisma/*.ts",
     "./auth/*": "./src/auth/*.ts",
-    "./platform/*": "./src/platform/*.ts"
+    "./platform/*": "./src/platform/*.ts",
+    "./crm/*": "./src/crm/*.ts",
+    "./tenant-client": "./src/tenant-client.ts"
   },
   "scripts": {
     "db:generate": "prisma generate",

@@ -19,8 +19,10 @@ import {
   CardTitle,
 } from "@ai-ems/ui/components/ui/card";
 import { prisma } from "@ai-ems/db/client";
+import { leadPipeline, overdueFollowUps } from "@ai-ems/db/crm/leads";
 import { listPendingInvitations } from "@ai-ems/db/platform/invitations";
 import { listMembers } from "@ai-ems/db/platform/members";
+import { formatCurrency } from "@ai-ems/ui/lib/format";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -43,10 +45,15 @@ export default async function WorkspaceDashboard({
   const canManageMembers = hasPermission(ctx, "platform.members.manage");
   const canManageSettings = hasPermission(ctx, "platform.settings.manage");
 
-  const [members, invitations] = await Promise.all([
+  const canReadLeads = hasPermission(ctx, "crm.lead.read");
+  const [members, invitations, pipeline, overdue] = await Promise.all([
     listMembers(prisma, ctx.organization.id),
     canManageMembers ? listPendingInvitations(prisma, ctx.organization.id) : Promise.resolve([]),
+    canReadLeads ? leadPipeline(ctx.db) : Promise.resolve([]),
+    canReadLeads ? overdueFollowUps(ctx.db, { limit: 5 }) : Promise.resolve([]),
   ]);
+  const pipelineValue = pipeline.reduce((sum, bucket) => sum + bucket.value, 0);
+  const openLeads = pipeline.reduce((sum, bucket) => sum + bucket.count, 0);
   const active = members.filter((m) => m.status === "ACTIVE");
 
   const steps: Step[] = [
@@ -109,6 +116,60 @@ export default async function WorkspaceDashboard({
           hint={`${ctx.permissions.length} permissions`}
         />
       </div>
+
+      {canReadLeads ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Pipeline</CardTitle>
+            <CardDescription>
+              {openLeads} open {openLeads === 1 ? "lead" : "leads"} worth{" "}
+              {formatCurrency(pipelineValue)}
+            </CardDescription>
+            <CardAction>
+              <Button asChild variant="ghost" size="sm">
+                <Link href={`/${org}/crm/leads` as Route}>
+                  All leads
+                  <ArrowRight />
+                </Link>
+              </Button>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <ul className="grid gap-2 sm:grid-cols-4">
+              {pipeline.map((bucket) => (
+                <li key={bucket.status} className="rounded-lg border p-3">
+                  <p className="text-sm text-muted-foreground capitalize">
+                    {bucket.status.toLowerCase()}
+                  </p>
+                  <p className="text-lg font-semibold">{bucket.count}</p>
+                  <p className="text-sm text-muted-foreground">{formatCurrency(bucket.value)}</p>
+                </li>
+              ))}
+            </ul>
+            {overdue.length > 0 ? (
+              <div className="grid gap-2">
+                <h3 className="text-sm font-medium">Follow-ups that have slipped</h3>
+                <ul className="grid gap-1" aria-label="Overdue follow-ups">
+                  {overdue.map((lead) => (
+                    <li key={lead.id} className="flex flex-wrap items-baseline gap-2 text-sm">
+                      <Link
+                        className="font-medium underline-offset-4 hover:underline"
+                        href={`/${org}/crm/leads/${lead.id}` as Route}
+                      >
+                        {lead.title}
+                      </Link>
+                      <span className="text-muted-foreground">
+                        {lead.ownerName ?? "Unassigned"} · due{" "}
+                        {lead.nextFollowUpAt?.toISOString().slice(0, 10)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {remaining.length > 0 ? (
         <Card>
