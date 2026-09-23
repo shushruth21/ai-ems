@@ -12,5 +12,6 @@
 | [0008](0008-workspace-routing-and-membership.md)          | Workspace routing, membership and invitations     | accepted |
 | [0009](0009-outbox-worker-roles-and-api-keys.md)          | Outbox worker, custom roles and API keys          | accepted |
 | [0010](0010-crm-ownership-numbering-and-lifecycle.md)     | CRM ownership, numbering and lead lifecycle       | accepted |
+| [0011](0011-catalog-options-and-publish-gate.md)          | Catalog structure, options and the publish gate   | accepted |
 
 New decisions: copy [0000-template.md](0000-template.md).

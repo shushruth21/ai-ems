@@ -12,7 +12,8 @@
     "./auth/*": "./src/auth/*.ts",
     "./platform/*": "./src/platform/*.ts",
     "./crm/*": "./src/crm/*.ts",
-    "./tenant-client": "./src/tenant-client.ts"
+    "./tenant-client": "./src/tenant-client.ts",
+    "./catalog/*": "./src/catalog/*.ts"
   },
   "scripts": {
     "db:generate": "prisma generate",
