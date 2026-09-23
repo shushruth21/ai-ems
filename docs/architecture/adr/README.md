@@ -11,5 +11,6 @@
 | [0007](0007-authentication-flows.md)                      | Authentication flows, MFA and rate limiting       | accepted |
 | [0008](0008-workspace-routing-and-membership.md)          | Workspace routing, membership and invitations     | accepted |
 | [0009](0009-outbox-worker-roles-and-api-keys.md)          | Outbox worker, custom roles and API keys          | accepted |
+| [0010](0010-crm-ownership-numbering-and-lifecycle.md)     | CRM ownership, numbering and lead lifecycle       | accepted |
 
 New decisions: copy [0000-template.md](0000-template.md).

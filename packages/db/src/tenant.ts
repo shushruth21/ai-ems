@@ -1,33 +1,15 @@
 import "server-only";
 
 import { prisma } from "./prisma";
-import { scopeArgs } from "./tenant-scope";
+import { scopeToTenant, type TenantClient } from "./tenant-client";
 
 /**
- * Tenant-scoped Prisma client. Every read is filtered by organizationId and
- * every write is stamped with it. Use unchecked inputs (`organizationId` /
- * `*Id` scalars) rather than nested `connect` on tenant models.
- *
- * Raw SQL ($queryRaw / $executeRaw) is not scoped — avoid it in feature code.
- * Postgres RLS remains the second line of defense.
+ * Tenant-scoped Prisma client for the app: the singleton, bound to one
+ * organization. Use unchecked inputs (`organizationId` / `*Id` scalars)
+ * rather than nested `connect` on tenant models.
  */
-export function getTenantDb(organizationId: string) {
-  return prisma.$extends({
-    name: "tenant-scope",
-    query: {
-      $allModels: {
-        async $allOperations({ model, operation, args, query }) {
-          const scoped = scopeArgs(
-            model,
-            operation,
-            args as Record<string, unknown>,
-            organizationId,
-          );
-          return query(scoped as typeof args);
-        },
-      },
-    },
-  });
+export function getTenantDb(organizationId: string): TenantDb {
+  return scopeToTenant(prisma, organizationId);
 }
 
-export type TenantDb = ReturnType<typeof getTenantDb>;
+export type TenantDb = TenantClient;

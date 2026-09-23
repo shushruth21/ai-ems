@@ -239,14 +239,14 @@ async function seedMasterData(organizationId: string) {
   console.log("✓ master data: warehouse, work centers, supplier, items, products, plans, accounts");
 }
 
-async function seedOwner(organizationId: string) {
+async function seedOwner(organizationId: string): Promise<string | null> {
   const email = process.env.SEED_OWNER_EMAIL;
   const password = process.env.SEED_OWNER_PASSWORD;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secret = process.env.SUPABASE_SECRET_KEY;
   if (!email || !password || !url || !secret) {
     console.log("• skipped demo owner (set SEED_OWNER_EMAIL / SEED_OWNER_PASSWORD to create one)");
-    return;
+    return null;
   }
   const admin = createClient(url, secret, { auth: { persistSession: false } });
   const { data: list } = await admin.auth.admin.listUsers();
@@ -282,13 +282,99 @@ async function seedOwner(organizationId: string) {
     create: { organizationId, profileId: user.id, roleId: owner.id, title: "Owner" },
   });
   console.log(`✓ demo owner ${email}`);
+  return user.id;
+}
+
+/**
+ * A handful of accounts, contacts and leads so the CRM screens show something
+ * on a fresh install. Keyed by name/number, so re-running changes nothing.
+ */
+async function seedCrm(organizationId: string, ownerId: string | null) {
+  const o = { organizationId };
+  const accounts = [
+    ["Harbor Hotels", "CUSTOMER", "Hospitality"],
+    ["Northwind Offices", "PROSPECT", "Corporate"],
+    ["Lakeside Interiors", "PARTNER", "Design studio"],
+  ] as const;
+  const created = new Map<string, string>();
+  for (const [name, type, industry] of accounts) {
+    const existing = await prisma.account.findFirst({ where: { organizationId, name } });
+    const account =
+      existing ?? (await prisma.account.create({ data: { ...o, name, type, industry, ownerId } }));
+    created.set(name, account.id);
+  }
+
+  const contacts = [
+    ["Nia", "Patel", "nia.patel@harbor.example", "Facilities manager", "Harbor Hotels"],
+    ["Tom", "Okafor", "tom.okafor@northwind.example", "Office lead", "Northwind Offices"],
+    ["Sara", "Lindqvist", "sara@lakeside.example", "Principal designer", "Lakeside Interiors"],
+  ] as const;
+  const contactIds = new Map<string, string>();
+  for (const [firstName, lastName, email, jobTitle, accountName] of contacts) {
+    const existing = await prisma.contact.findFirst({ where: { organizationId, email } });
+    const contact =
+      existing ??
+      (await prisma.contact.create({
+        data: {
+          ...o,
+          firstName,
+          lastName,
+          email,
+          jobTitle,
+          accountId: created.get(accountName) ?? null,
+        },
+      }));
+    contactIds.set(accountName, contact.id);
+  }
+
+  const year = new Date().getUTCFullYear();
+  const leads = [
+    ["Lobby refurbishment", "REFERRAL", "QUALIFIED", 24000, "Harbor Hotels", -3],
+    ["40 task chairs", "WEBSITE", "PROPOSAL", 18500, "Northwind Offices", 5],
+    ["Showroom sample set", "WALK_IN", "NEW", 3200, "Lakeside Interiors", null],
+  ] as const;
+  let index = 0;
+  for (const [title, source, status, value, accountName, followUpInDays] of leads) {
+    index += 1;
+    const number = `LD-${year}-${String(index).padStart(5, "0")}`;
+    const existing = await prisma.lead.findUnique({
+      where: { organizationId_number: { organizationId, number } },
+    });
+    if (existing) continue;
+    await prisma.lead.create({
+      data: {
+        ...o,
+        number,
+        title,
+        source,
+        status,
+        estimatedValue: value,
+        accountId: created.get(accountName) ?? null,
+        contactId: contactIds.get(accountName) ?? null,
+        ownerId,
+        nextFollowUpAt:
+          followUpInDays === null
+            ? null
+            : new Date(Date.now() + followUpInDays * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+  // Keep the sequence ahead of the seeded numbers.
+  await prisma.sequence.update({
+    where: { organizationId_key: { organizationId, key: "lead" } },
+    data: { nextValue: leads.length + 1, year },
+  });
+  console.log(
+    `✓ CRM: ${accounts.length} accounts, ${contacts.length} contacts, ${leads.length} leads`,
+  );
 }
 
 async function main() {
   await seedPermissions();
   const org = await seedOrganization();
   await seedMasterData(org.id);
-  await seedOwner(org.id);
+  const ownerId = await seedOwner(org.id);
+  await seedCrm(org.id, ownerId);
 }
 
 main()

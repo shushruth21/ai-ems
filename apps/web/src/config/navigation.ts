@@ -112,6 +112,14 @@ export const NAVIGATION: readonly NavSection[] = [
         keywords: ["customers", "companies", "contacts"],
       },
       {
+        id: "contacts",
+        title: "Contacts",
+        href: "/crm/contacts",
+        icon: Contact,
+        permission: "crm.account.read",
+        keywords: ["people", "customers"],
+      },
+      {
         id: "quotes",
         title: "Quotes",
         href: "/sales/quotes",
