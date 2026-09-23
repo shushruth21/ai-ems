@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { RecordCrumb } from "@/components/layout/record-crumb";
 import { LeadWorkspace } from "@/features/crm/components/lead-workspace";
 import { getOrgContext, hasPermission } from "@/server/org/context";
 import { prisma } from "@ai-ems/db/client";
@@ -33,6 +34,7 @@ export default async function LeadPage({ params }: PageProps<"/[org]/crm/leads/[
 
   return (
     <PageContainer width="wide">
+      <RecordCrumb label={lead.title} />
       <PageHeader
         title={lead.title}
         description={`${lead.number} · created ${lead.createdAt.toISOString().slice(0, 10)}`}

@@ -67,6 +67,7 @@ export function SampleForm() {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
+        method="post"
         noValidate
         className="grid max-w-2xl gap-5 sm:grid-cols-2"
       >

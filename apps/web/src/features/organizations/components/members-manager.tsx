@@ -319,6 +319,7 @@ function InviteForm({
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end"
         aria-label="Invite a member"

@@ -18,9 +18,9 @@ import { breadcrumbsFor } from "@/config/navigation";
 import { useShell } from "./shell-context";
 
 export function AppBreadcrumbs() {
-  const { navigation, basePath } = useShell();
+  const { navigation, basePath, recordLabel } = useShell();
   const pathname = usePathname();
-  const crumbs = breadcrumbsFor(navigation, pathname, basePath);
+  const crumbs = breadcrumbsFor(navigation, pathname, basePath, recordLabel ?? undefined);
   if (!crumbs.length) return null;
 
   return (

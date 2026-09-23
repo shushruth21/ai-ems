@@ -31,7 +31,13 @@ export function MfaChallengeForm({ factorId, next }: { factorId: string; next?: 
 
   return (
     <Form {...form}>
-      <form onSubmit={onSubmit} noValidate className="grid gap-4" aria-label="Verify sign-in">
+      <form
+        onSubmit={onSubmit}
+        method="post"
+        noValidate
+        className="grid gap-4"
+        aria-label="Verify sign-in"
+      >
         <FormFeedback feedback={feedback} />
         <FormField
           control={form.control}

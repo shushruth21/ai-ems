@@ -81,6 +81,7 @@ export function GroupForm({
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2"
         aria-label={group ? `Edit ${group.label}` : "New option group"}
@@ -240,6 +241,7 @@ export function OptionForm({
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="mt-2 grid gap-3 rounded-lg border bg-surface p-3 sm:grid-cols-3"
         aria-label={option ? `Edit ${option.label}` : "New option"}

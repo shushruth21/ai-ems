@@ -96,7 +96,13 @@ export function CreateOrganizationForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={onSubmit} noValidate className="grid gap-5" aria-label="Create workspace">
+      <form
+        onSubmit={onSubmit}
+        method="post"
+        noValidate
+        className="grid gap-5"
+        aria-label="Create workspace"
+      >
         <FormFeedback feedback={feedback} />
         <FormField
           control={form.control}

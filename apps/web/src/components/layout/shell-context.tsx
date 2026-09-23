@@ -19,6 +19,9 @@ interface ShellState extends ShellContextValue {
   setCommandOpen: (open: boolean) => void;
   shortcutsOpen: boolean;
   setShortcutsOpen: (open: boolean) => void;
+  /** Name of the record on screen, for the last breadcrumb. */
+  recordLabel: string | null;
+  setRecordLabel: (label: string | null) => void;
 }
 
 const ShellContext = createContext<ShellState | null>(null);
@@ -40,6 +43,7 @@ export function ShellProvider({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [recordLabel, setRecordLabel] = useState<string | null>(null);
 
   const setCollapsed = useCallback((next: boolean) => {
     setCollapsedState(next);
@@ -70,6 +74,8 @@ export function ShellProvider({
       setCommandOpen,
       shortcutsOpen,
       setShortcutsOpen,
+      recordLabel,
+      setRecordLabel,
     }),
     [
       value,
@@ -81,6 +87,7 @@ export function ShellProvider({
       mobileNavOpen,
       commandOpen,
       shortcutsOpen,
+      recordLabel,
     ],
   );
 

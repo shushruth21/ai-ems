@@ -213,6 +213,7 @@ function AccountForm({
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2"
         aria-label={account ? `Edit ${account.name}` : "New account"}

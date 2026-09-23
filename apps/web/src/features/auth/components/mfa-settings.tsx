@@ -221,6 +221,7 @@ function EnrollTotp({
       <Form {...form}>
         <form
           onSubmit={onSubmit}
+          method="post"
           noValidate
           className="grid max-w-xs gap-4"
           aria-label="Confirm authenticator"

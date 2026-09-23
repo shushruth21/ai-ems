@@ -159,6 +159,7 @@ function CreateKeyForm({ slug, onCreated }: { slug: string; onCreated: (key: New
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-3 rounded-lg border p-4 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end"
         aria-label="Create an API key"

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { RecordCrumb } from "@/components/layout/record-crumb";
 import { ProductWorkspace } from "@/features/catalog/components/product-workspace";
 import { getOrgContext, hasPermission } from "@/server/org/context";
 import { listCategories } from "@ai-ems/db/catalog/categories";
@@ -24,6 +25,7 @@ export default async function ProductPage({
 
   return (
     <PageContainer width="wide">
+      <RecordCrumb label={product.name} />
       <PageHeader
         title={product.name}
         description={`${product.sku} · ${product.categoryName}`}

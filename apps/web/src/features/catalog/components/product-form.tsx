@@ -78,6 +78,7 @@ export function ProductForm({
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-4"
         aria-label={product?.id ? "Edit product" : "New product"}

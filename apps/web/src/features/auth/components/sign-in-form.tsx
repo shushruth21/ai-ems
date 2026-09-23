@@ -63,6 +63,7 @@ function PasswordSignIn({ next }: { next?: string }) {
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-4"
         aria-label="Sign in with password"
@@ -127,6 +128,7 @@ function MagicLinkSignIn({ next }: { next?: string }) {
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-4"
         aria-label="Sign in with an email link"
