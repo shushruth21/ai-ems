@@ -13,6 +13,12 @@ import {
   listCategories,
   updateCategory,
 } from "../../src/catalog/categories";
+import {
+  deleteConfiguration,
+  getProductSpec,
+  listConfigurations,
+  saveConfiguration,
+} from "../../src/catalog/configurator";
 import { deleteOptionGroup, saveOption, saveOptionGroup } from "../../src/catalog/options";
 import {
   createProduct,
@@ -274,5 +280,181 @@ describe.skipIf(!adminUrl)("catalog repositories (real schema)", () => {
         "option_group.deleted",
       ]),
     );
+  });
+
+  it("hides a question until its trigger is answered, and prices what's chosen", async () => {
+    const { id } = await createProduct(
+      db(),
+      actor(),
+      productInput({ sku: "SOFA-CARE", name: "Care sofa", isConfigurable: true }),
+    );
+    const fabric = await saveOptionGroup(db(), actor(), {
+      productId: id,
+      label: "Fabric",
+      input: "SELECT",
+      required: true,
+      sortOrder: 0,
+    });
+    await saveOption(db(), actor(), {
+      groupId: fabric.id,
+      label: "Standard weave",
+      priceDelta: 0,
+      pricePctDelta: 0,
+      sortOrder: 0,
+    });
+    await saveOption(db(), actor(), {
+      groupId: fabric.id,
+      label: "Olive velvet",
+      priceDelta: 150,
+      pricePctDelta: 0,
+      sortOrder: 1,
+    });
+    // A follow-up question that only applies to velvet.
+    await saveOptionGroup(db(), actor(), {
+      productId: id,
+      label: "Care kit",
+      input: "BOOLEAN",
+      required: true,
+      sortOrder: 1,
+      visibleWhen: { group: "fabric", equals: "olive_velvet" },
+    });
+    await transitionProduct(db(), actor(), id, "publish");
+
+    const spec = (await getProductSpec(db(), id))!;
+    expect(spec.groups.map((g) => g.code)).toEqual(["fabric", "care_kit"]);
+    expect(spec.groups[1]?.visibleWhen).toEqual({ group: "fabric", equals: "olive_velvet" });
+
+    // Standard weave never asks about the care kit, so this is complete.
+    const plain = await saveConfiguration(db(), actor(), {
+      productId: id,
+      name: "Plain",
+      answers: { fabric: "standard_weave" },
+      quantity: 2,
+    });
+    expect(plain.unitPrice).toBe("1200.00");
+    // The product carries 7.5% tax: 2 × 1200 = 2400, + 180.
+    expect(plain.total).toBe("2580.00");
+
+    // Velvet does ask, and the answer is required.
+    await expect(
+      saveConfiguration(db(), actor(), {
+        productId: id,
+        name: "Velvet",
+        answers: { fabric: "olive_velvet" },
+        quantity: 1,
+      }),
+    ).rejects.toMatchObject({ code: "invalid_state" });
+
+    const velvet = await saveConfiguration(db(), actor(), {
+      productId: id,
+      name: "Velvet",
+      answers: { fabric: "olive_velvet", care_kit: true },
+      quantity: 1,
+    });
+    expect(velvet.unitPrice).toBe("1350.00");
+
+    const saved = await listConfigurations(db(), { productId: id });
+    expect(saved.map((c) => c.name).sort()).toEqual(["Plain", "Velvet"]);
+    expect(saved.find((c) => c.name === "Velvet")?.summary).toEqual([
+      "Fabric: Olive velvet",
+      "Care kit: true",
+    ]);
+
+    await deleteConfiguration(db(), actor(), saved[0]!.id);
+    expect(await listConfigurations(db(), { productId: id })).toHaveLength(1);
+  });
+
+  it("refuses answers the product doesn't offer, and drafts nobody can quote", async () => {
+    const draft = await createProduct(
+      db(),
+      actor(),
+      productInput({ sku: "DRAFT-1", name: "Draft only" }),
+    );
+    await expect(
+      saveConfiguration(db(), actor(), {
+        productId: draft.id,
+        name: "Too early",
+        answers: {},
+        quantity: 1,
+      }),
+    ).rejects.toMatchObject({ code: "invalid_state" });
+
+    const { id } = await createProduct(
+      db(),
+      actor(),
+      productInput({ sku: "STOOL-1", name: "Stool", isConfigurable: true }),
+    );
+    const finish = await saveOptionGroup(db(), actor(), {
+      productId: id,
+      label: "Finish",
+      input: "SELECT",
+      required: true,
+      sortOrder: 0,
+    });
+    await saveOption(db(), actor(), {
+      groupId: finish.id,
+      label: "Oak",
+      priceDelta: 0,
+      pricePctDelta: 0,
+      sortOrder: 0,
+    });
+    await transitionProduct(db(), actor(), id, "publish");
+
+    await expect(
+      saveConfiguration(db(), actor(), {
+        productId: id,
+        name: "Invented",
+        answers: { finish: "unobtainium" },
+        quantity: 1,
+      }),
+    ).rejects.toMatchObject({ code: "invalid_state" });
+  });
+
+  it("won't let a question depend on an answer that doesn't exist", async () => {
+    const { id } = await createProduct(
+      db(),
+      actor(),
+      productInput({ sku: "RULE-1", name: "Rule check", isConfigurable: true }),
+    );
+    const base = await saveOptionGroup(db(), actor(), {
+      productId: id,
+      label: "Base",
+      input: "SELECT",
+      required: true,
+      sortOrder: 0,
+    });
+    await saveOption(db(), actor(), {
+      groupId: base.id,
+      label: "Metal",
+      priceDelta: 0,
+      pricePctDelta: 0,
+      sortOrder: 0,
+    });
+    await expect(
+      saveOptionGroup(db(), actor(), {
+        productId: id,
+        label: "Follow-up",
+        input: "BOOLEAN",
+        required: false,
+        sortOrder: 1,
+        visibleWhen: { group: "base", equals: "wood" },
+      }),
+    ).rejects.toMatchObject({ code: "not_found" });
+    // And a question can't hide behind its own answer.
+    await expect(
+      saveOptionGroup(
+        db(),
+        actor(),
+        {
+          productId: id,
+          label: "Base",
+          input: "SELECT",
+          required: true,
+          sortOrder: 0,
+          visibleWhen: { group: "base", equals: "metal" },
+        },
+        base.id,
+      ),
+    ).rejects.toMatchObject({ code: "invalid_state" });
   });
 });

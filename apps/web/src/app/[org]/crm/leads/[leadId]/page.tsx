@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { RecordCrumb } from "@/components/layout/record-crumb";
+import { SavedConfigurations } from "@/features/catalog/components/saved-configurations";
 import { LeadWorkspace } from "@/features/crm/components/lead-workspace";
 import { getOrgContext, hasPermission } from "@/server/org/context";
 import { prisma } from "@ai-ems/db/client";
+import { listConfigurations } from "@ai-ems/db/catalog/configurator";
 import { accountOptions } from "@ai-ems/db/crm/accounts";
 import { listActivities } from "@ai-ems/db/crm/activities";
 import { contactOptions } from "@ai-ems/db/crm/contacts";
@@ -25,11 +27,14 @@ export default async function LeadPage({ params }: PageProps<"/[org]/crm/leads/[
   const lead = await getLead(ctx.db, actor, leadId);
   if (!lead) notFound();
 
-  const [activities, accounts, contacts, members] = await Promise.all([
+  const [activities, accounts, contacts, members, configurations] = await Promise.all([
     listActivities(ctx.db, lead.id),
     accountOptions(ctx.db),
     contactOptions(ctx.db),
     canAssign ? listMembers(prisma, ctx.organization.id) : Promise.resolve([]),
+    hasPermission(ctx, "sales.quote.read")
+      ? listConfigurations(ctx.db, { leadId: lead.id })
+      : Promise.resolve([]),
   ]);
 
   return (
@@ -79,6 +84,28 @@ export default async function LeadPage({ params }: PageProps<"/[org]/crm/leads/[
           actorName: activity.actorName,
         }))}
       />
+      {hasPermission(ctx, "sales.quote.read") ? (
+        <SavedConfigurations
+          slug={org}
+          showProduct
+          canWrite={hasPermission(ctx, "sales.quote.write")}
+          configureHref={`/${org}/catalog/products`}
+          configurations={configurations.map((c) => ({
+            id: c.id,
+            name: c.name,
+            productId: c.productId,
+            productName: c.productName,
+            productSku: c.productSku,
+            leadId: c.leadId,
+            leadTitle: c.leadTitle,
+            summary: c.summary,
+            quantity: c.quantity,
+            unitPrice: c.unitPrice,
+            total: c.total,
+            createdAt: c.createdAt.toISOString(),
+          }))}
+        />
+      ) : null}
     </PageContainer>
   );
 }

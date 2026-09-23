@@ -51,6 +51,7 @@ model Organization {
   optionGroups       OptionGroup[]
   productOptions     ProductOption[]
   priceRules         PriceRule[]
+  savedConfigs       SavedConfiguration[]
   quotes             Quote[]
   quoteLines         QuoteLine[]
   salesOrders        SalesOrder[]

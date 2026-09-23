@@ -42,14 +42,15 @@ model Product {
   updatedAt      DateTime      @updatedAt @map("updated_at")
   version        Int           @default(0)
 
-  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  category     ProductCategory   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  item         Item?             @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category     ProductCategory      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  item         Item?                @relation(fields: [itemId], references: [id], onDelete: SetNull)
   optionGroups OptionGroup[]
   priceRules   PriceRule[]
   boms         BillOfMaterials[]
   quoteLines   QuoteLine[]
   orderLines   SalesOrderLine[]
+  savedConfigs SavedConfiguration[]
 
   @@unique([organizationId, sku])
   @@index([organizationId, categoryId, status])
@@ -133,4 +134,33 @@ model PriceRule {
 
   @@index([organizationId, productId, active])
   @@map("price_rules")
+}
+
+/// A configured product someone saved: the answers, the price they were
+/// quoted, and optionally the lead it was put together for. Phase 9 turns one
+/// of these into a quote line without re-asking the questions.
+model SavedConfiguration {
+  id             String   @id @default(cuid(2))
+  organizationId String   @map("organization_id")
+  productId      String   @map("product_id")
+  leadId         String?  @map("lead_id")
+  name           String
+  /// { [optionGroupCode]: value } — validated against the product's groups.
+  answers        Json
+  quantity       Decimal  @default(1) @db.Decimal(14, 3)
+  unitPrice      Decimal  @map("unit_price") @db.Decimal(14, 2)
+  total          Decimal  @db.Decimal(14, 2)
+  /// Server pricing breakdown as shown when it was saved.
+  priceBreakdown Json?    @map("price_breakdown")
+  createdById    String?  @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  lead         Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, productId])
+  @@index([organizationId, leadId])
+  @@map("saved_configurations")
 }

@@ -59,6 +59,7 @@ export interface OptionView {
 export interface OptionGroupView {
   id: string;
   code: string;
+  visibleWhen: { group: string; equals: string } | null;
   label: string;
   input: "SELECT" | "MULTI_SELECT" | "NUMBER" | "TEXT" | "BOOLEAN";
   required: boolean;
@@ -161,6 +162,7 @@ export async function getProduct(db: CatalogDb, productId: string): Promise<Prod
           minValue: true,
           maxValue: true,
           sortOrder: true,
+          visibleWhen: true,
           options: {
             orderBy: [{ sortOrder: "asc" }, { label: "asc" }],
             select: {
@@ -188,6 +190,7 @@ export async function getProduct(db: CatalogDb, productId: string): Promise<Prod
     minValue: g.minValue ? Number(g.minValue) : null,
     maxValue: g.maxValue ? Number(g.maxValue) : null,
     sortOrder: g.sortOrder,
+    visibleWhen: (g.visibleWhen as { group: string; equals: string } | null) ?? null,
     options: g.options.map((o) => ({
       id: o.id,
       code: o.code,

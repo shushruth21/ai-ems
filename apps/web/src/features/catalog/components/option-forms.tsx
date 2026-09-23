@@ -33,12 +33,21 @@ const INPUT_LABELS: Record<string, string> = {
 
 export interface GroupValues {
   id: string;
+  code: string;
   label: string;
   input: string;
   required: boolean;
   minValue: number | null;
   maxValue: number | null;
   sortOrder: number;
+  visibleWhen: { group: string; equals: string } | null;
+}
+
+/** The other questions on this product that can act as a trigger. */
+export interface TriggerGroup {
+  code: string;
+  label: string;
+  options: Array<{ code: string; label: string }>;
 }
 
 type GroupFormValues = z.input<typeof optionGroupSchema>;
@@ -47,12 +56,14 @@ export function GroupForm({
   slug,
   productId,
   group,
+  triggers = [],
   onDone,
   onCancel,
 }: {
   slug: string;
   productId: string;
   group?: GroupValues;
+  triggers?: TriggerGroup[];
   onDone: (message: string) => void;
   onCancel: () => void;
 }) {
@@ -69,13 +80,18 @@ export function GroupForm({
       maxValue:
         group?.maxValue === null || group?.maxValue === undefined ? "" : String(group.maxValue),
       sortOrder: String(group?.sortOrder ?? 0),
+      visibleWhenGroup: group?.visibleWhen?.group ?? "",
+      visibleWhenOption: group?.visibleWhen?.equals ?? "",
     },
   });
   const { onSubmit, pending, feedback } = useActionForm(form, (values) => saveGroup(slug, values), {
     onSuccess: (result) => onDone(result.message ?? "Saved."),
   });
-  // Mirrors the select so the numeric range appears without `watch()`.
+  // Mirrors the selects so dependent fields appear without `watch()`.
   const [inputKind, setInputKind] = useState(group?.input ?? "SELECT");
+  const [triggerCode, setTriggerCode] = useState(group?.visibleWhen?.group ?? "");
+  const available = triggers.filter((t) => t.code !== group?.code && t.options.length > 0);
+  const triggerOptions = available.find((t) => t.code === triggerCode)?.options ?? [];
 
   return (
     <Form {...form}>
@@ -162,6 +178,60 @@ export function GroupForm({
                 </FormItem>
               )}
             />
+          </>
+        ) : null}
+        {available.length > 0 ? (
+          <>
+            <FormField
+              control={form.control}
+              name="visibleWhenGroup"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Only ask when</FormLabel>
+                  <FormControl>
+                    <NativeSelect
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(event) => {
+                        field.onChange(event);
+                        setTriggerCode(event.target.value);
+                        form.setValue("visibleWhenOption", "");
+                      }}
+                    >
+                      <option value="">Always ask</option>
+                      {available.map((trigger) => (
+                        <option key={trigger.code} value={trigger.code}>
+                          {trigger.label}
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {triggerCode ? (
+              <FormField
+                control={form.control}
+                name="visibleWhenOption"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>…is</FormLabel>
+                    <FormControl>
+                      <NativeSelect {...field} value={field.value ?? ""}>
+                        <option value="">— choose —</option>
+                        {triggerOptions.map((option) => (
+                          <option key={option.code} value={option.code}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </NativeSelect>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
           </>
         ) : null}
         <FormField

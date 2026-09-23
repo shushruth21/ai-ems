@@ -105,11 +105,12 @@ model Lead {
   updatedAt       DateTime   @updatedAt @map("updated_at")
   version         Int        @default(0)
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  account      Account?     @relation(fields: [accountId], references: [id], onDelete: SetNull)
-  contact      Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  account      Account?             @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  contact      Contact?             @relation(fields: [contactId], references: [id], onDelete: SetNull)
   activities   Activity[]
   quotes       Quote[]
+  savedConfigs SavedConfiguration[]
 
   @@unique([organizationId, number])
   @@index([organizationId, status, ownerId])
