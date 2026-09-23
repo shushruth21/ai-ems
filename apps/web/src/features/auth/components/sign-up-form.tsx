@@ -41,7 +41,13 @@ export function SignUpForm({ next }: { next?: string }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={onSubmit} noValidate className="grid gap-4" aria-label="Create account">
+      <form
+        onSubmit={onSubmit}
+        method="post"
+        noValidate
+        className="grid gap-4"
+        aria-label="Create account"
+      >
         <FormFeedback feedback={feedback} />
         <FormField
           control={form.control}

@@ -89,6 +89,7 @@ export function LeadForm({
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-4"
         aria-label={lead?.id ? "Edit lead" : "New lead"}

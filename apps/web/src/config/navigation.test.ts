@@ -67,6 +67,28 @@ describe("navigation", () => {
     expect(breadcrumbsFor(NAVIGATION, "/elsewhere", base)).toEqual([]);
   });
 
+  it("names a record instead of showing its id", () => {
+    const id = "nvevrkm3qxdrazshv2s8zb5n";
+    // Without a label the id is dropped — it would tell the reader nothing.
+    expect(breadcrumbsFor(NAVIGATION, `${base}/catalog/products/${id}`, base)).toEqual([
+      { label: "Sell" },
+      { label: "Catalog", href: `${base}/catalog/products` },
+    ]);
+    expect(
+      breadcrumbsFor(NAVIGATION, `${base}/catalog/products/${id}`, base, "Aurora Lounge Chair"),
+    ).toEqual([
+      { label: "Sell" },
+      { label: "Catalog", href: `${base}/catalog/products` },
+      { label: "Aurora Lounge Chair", href: undefined },
+    ]);
+    // Readable segments are still shown, label or not.
+    expect(breadcrumbsFor(NAVIGATION, `${base}/catalog/products/new`, base)).toEqual([
+      { label: "Sell" },
+      { label: "Catalog", href: `${base}/catalog/products` },
+      { label: "New", href: undefined },
+    ]);
+  });
+
   it("derives g-shortcuts", () => {
     const keys = navigationShortcuts(NAVIGATION).map((s) => s.keys);
     expect(keys).toContain("g o");

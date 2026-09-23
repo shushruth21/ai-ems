@@ -32,6 +32,7 @@ export function ConfirmLinkForm(props: z.input<typeof confirmLinkSchema>) {
   return (
     <form
       className="grid gap-4"
+      method="post"
       onSubmit={(e) => {
         e.preventDefault();
         setFeedback(null);

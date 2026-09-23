@@ -36,7 +36,13 @@ export function ForgotPasswordForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={onSubmit} noValidate className="grid gap-4" aria-label="Reset password">
+      <form
+        onSubmit={onSubmit}
+        method="post"
+        noValidate
+        className="grid gap-4"
+        aria-label="Reset password"
+      >
         <FormFeedback feedback={feedback} />
         <FormField
           control={form.control}

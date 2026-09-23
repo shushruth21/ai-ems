@@ -193,6 +193,7 @@ function CategoryForm({
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-3 rounded-lg border p-4 sm:grid-cols-3"
         aria-label={category ? `Edit ${category.name}` : "New category"}

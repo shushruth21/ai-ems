@@ -212,6 +212,7 @@ function ContactForm({
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2"
         aria-label={contact ? "Edit contact" : "New contact"}

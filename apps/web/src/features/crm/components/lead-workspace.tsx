@@ -328,6 +328,7 @@ function ActivityForm({ slug, leadId }: { slug: string; leadId: string }) {
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-3 rounded-lg border p-4"
         aria-label="Log activity"

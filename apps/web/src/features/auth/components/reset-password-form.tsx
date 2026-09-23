@@ -30,6 +30,7 @@ export function ResetPasswordForm({ email }: { email: string }) {
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-4"
         aria-label="Choose a new password"

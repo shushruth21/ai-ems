@@ -59,6 +59,7 @@ export function ChangePasswordForm({
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid max-w-md gap-4"
         aria-label="Change password"

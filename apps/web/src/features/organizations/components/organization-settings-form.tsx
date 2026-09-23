@@ -57,6 +57,7 @@ export function OrganizationSettingsForm({
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid max-w-xl gap-5"
         aria-label="Workspace settings"

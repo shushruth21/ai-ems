@@ -382,11 +382,19 @@ export interface Crumb {
   href?: string;
 }
 
-/** Section › item › (remaining segments, title-cased). */
+/** Record ids (cuid2) carry no meaning in a breadcrumb — "Nvevrkm3qxd…" helps nobody. */
+const OPAQUE_ID = /^[a-z0-9]{16,32}$|^[0-9a-f-]{36}$/i;
+
+/**
+ * Section › item › (remaining segments, title-cased). A detail page passes
+ * `recordLabel` — the name it shows in its own heading — so the last crumb
+ * reads "Aurora Lounge Chair" rather than the row's id.
+ */
 export function breadcrumbsFor(
   sections: readonly NavSection[],
   pathname: string,
   basePath: string,
+  recordLabel?: string,
 ): Crumb[] {
   const item = findActiveItem(sections, pathname, basePath);
   if (!item) return [];
@@ -401,10 +409,16 @@ export function breadcrumbsFor(
   if (section && section.id !== "workspace") crumbs.push({ label: section.title });
   crumbs.push({ label: item.title, href: rest.length ? itemHref : undefined });
   rest.forEach((segment, i) => {
-    const label = /^[A-Z]{2,5}-/.test(segment)
-      ? segment
-      : segment.replace(/[-_]+/g, " ").replace(/^./, (c) => c.toUpperCase());
-    const href = i < rest.length - 1 ? `${itemHref}/${rest.slice(0, i + 1).join("/")}` : undefined;
+    const last = i === rest.length - 1;
+    const opaque = OPAQUE_ID.test(segment);
+    if (opaque && !(last && recordLabel)) return;
+    const label =
+      opaque && recordLabel
+        ? recordLabel
+        : /^[A-Z]{2,5}-/.test(segment)
+          ? segment
+          : segment.replace(/[-_]+/g, " ").replace(/^./, (c) => c.toUpperCase());
+    const href = last ? undefined : `${itemHref}/${rest.slice(0, i + 1).join("/")}`;
     crumbs.push({ label, href });
   });
   return crumbs;

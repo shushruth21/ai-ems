@@ -204,6 +204,7 @@ function RoleForm({
     <Form {...form}>
       <form
         onSubmit={onSubmit}
+        method="post"
         noValidate
         className="grid gap-4 rounded-lg border p-4"
         aria-label={role ? `Edit ${role.name}` : "New role"}
