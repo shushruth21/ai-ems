@@ -16,8 +16,13 @@ jobs:
   ci:
     uses: ./.github/workflows/ci.yml
 
+  # Staging needs a real Postgres/Supabase project (STAGING_ENABLED=true as a
+  # repo/environment variable, plus the "staging" environment's DIRECT_URL
+  # secret). Until then this skips cleanly instead of failing on a database
+  # that doesn't exist yet.
   migrate:
     needs: ci
+    if: vars.STAGING_ENABLED == 'true'
     uses: ./.github/workflows/db-migrate.yml
     with:
       environment: staging
@@ -25,6 +30,7 @@ jobs:
 
   deploy:
     needs: migrate
+    if: vars.STAGING_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment:
       name: staging

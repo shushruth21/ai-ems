@@ -12,7 +12,8 @@
     "db:generate": {
       "inputs": ["prisma/schema/**", "prisma.config.ts"],
       "outputs": ["src/generated/**"],
-      "cache": true
+      "cache": true,
+      "env": ["DATABASE_URL", "SUPABASE_SECRET_KEY"]
     },
     "build": {
       "dependsOn": ["^build", "^db:generate", "db:generate"],
